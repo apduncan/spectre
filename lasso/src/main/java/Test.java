@@ -13,6 +13,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
+import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.RandomDistanceGenerator;
@@ -21,6 +22,9 @@ import uk.ac.uea.cmp.spectre.core.io.nexus.NexusWriter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.Set;
 
 public class Test {
     public static void main(String[] args) {
@@ -31,9 +35,30 @@ public class Test {
         nexus.setTaxa(fd.getTaxa());
         nexus.setDistanceMatrix(fd);
         try {
-            new NexusWriter().writeDistanceMatrix(new File("/home/hal/Dropbox/Dissertation/random.nex"), fd);
+            new NexusWriter().writeDistanceMatrix(new File("/home/hal/Dropbox/Dissertation/random2.nex"), fd);
         } catch (IOException err) {
             System.out.println("failed");
         }
+
+        //First try at a lasso method
+        //double[][] matrix = new double[][] { {0, 2, 0, 4, 0}, {2, 0, 2, 2, 0}, {0, 2, 0, 2, 6}, {4, 2, 2, 0, 6}, {0, 0, 6, 6, 0} };
+        //with disconnected component
+        /*double[][] matrix = new double[][] { {0, 2, 0, 4, 0, 0, 0}, {2, 0, 2, 2, 0, 0, 0}, {0, 2, 0, 2, 6, 0, 0},
+                {4, 2, 2, 0, 6, 0, 0}, {0, 0, 6, 6, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 2}, {0, 0, 0, 0, 0, 2, 0} };*/
+        LassoDistanceGraph simpleGraph = new LassoDistanceGraph(new RandomDistanceGenerator().generateDistances(300));
+        //make some objects
+        DistanceUpdater modal = DistanceUpdaterFactory.MODAL.get(new LassoOptions());
+        CliqueFinder heuristic = CliqueFinderFactory.HEURISTIC.get(new LassoOptions());
+        long countEdges = 0;
+        do {
+            //Identify clique
+            LassoDistanceGraph minWeight = new LassoDistanceGraph(simpleGraph);
+            minWeight.retainMinEdges();
+            Set<Identifier> clique = heuristic.find(minWeight);
+            simpleGraph.joinCluster(new ArrayList<>(clique), modal);
+            //Count non-0 edges
+            countEdges = simpleGraph.getMap().values().stream().filter(length -> length > 0).count();
+        } while (countEdges > 0);
+        System.out.println(simpleGraph.getLargestCluster());
     }
 }

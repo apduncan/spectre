@@ -32,19 +32,35 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
         identifierMap = new HashMap<>();
         copy.identifierMap.entrySet().parallelStream()
                 .forEach((entry) -> identifierMap.put(new Identifier(entry.getKey()), new LassoTree(entry.getValue())));
+        this.removeZeroWeights();
     }
 
     public LassoDistanceGraph(DistanceMatrix matrix) {
         super(matrix);
         identifierMap = new HashMap<>();
+        this.removeZeroWeights();
+    }
+
+    public LassoDistanceGraph(double[][] matrix) {
+        super(matrix);
+        this.removeZeroWeights();
+    }
+
+    private void removeZeroWeights() {
+        Set<Pair<Identifier, Identifier>> remove = this.getMap().entrySet().stream()
+                .filter(entry -> entry.getValue() == 0)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+        remove.stream().forEach(this::removeDistance);
     }
 
     /**
      * Get any vertices which are adjacent to vertex. Distances of 0 are treated as no edge existing.
-     * @param vertex Vertex to get neighbours of
+     * @param vertexIn Vertex to get neighbours of
      * @return Set of neighbouring vertices
      */
-    public Set<Identifier> getNeighbours(Identifier vertex) {
+    public Set<Identifier> getNeighbours(Identifier vertexIn) {
+        final Identifier vertex = this.getLocalIdentifier(vertexIn);
         return this.getMap().entrySet().parallelStream()
                 .filter(entry -> entry.getValue() > 0)
                 //get the pair of vertices this distance is between
@@ -72,6 +88,15 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
                 .collect(Collectors.toList());
         //Remove each identified pair from the map
         remove.parallelStream().forEach(pair -> this.removeDistance(pair));
+    }
+
+    @Override
+    public void removeTaxon(Identifier identifier) {
+        super.removeTaxon(identifier);
+        //Remove from identifier map
+        if(identifierMap.containsKey(identifier)) {
+            identifierMap.remove(identifier);
+        }
     }
 
     /**
@@ -128,7 +153,7 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
                 throw new IllegalStateException("Identifier not present in graph");
             return localVertex.get();
         } else {
-            return vertex;
+            return this.getTaxa().getByName(vertex.getName());
         }
     }
 
@@ -182,5 +207,18 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
         //Update distances
         updater.update(this, parentId);
         return parent;
+    }
+
+    /**
+     *
+     */
+    public LassoTree getLargestCluster() {
+        return this.identifierMap.values().stream()
+                .reduce(null, (a,b) -> {
+                    if(a == null) { return b; }
+                    else if(b.getNbTaxa() > a.getNbTaxa()) { return b; }
+                    else if(b.getNbTaxa() == a.getNbTaxa()) {return new Random().nextBoolean() ? a : b; }
+                    else { return a; }
+                });
     }
 }

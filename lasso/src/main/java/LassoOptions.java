@@ -13,6 +13,92 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
+import java.io.File;
+
 public class LassoOptions {
-    //TODO: Implement options class
+    final public static int DEFAULT_LASSO_RUNS = 10;
+    final public static int DEFAULT_CLIQUE_ATTEMPTS = 10;
+    final public static DistanceUpdaterFactory DEFAULT_DISTANCE_UPDATER = DistanceUpdaterFactory.MODAL;
+    final public static CliqueFinderFactory DEFAULT_CLIQUE_FINDER = CliqueFinderFactory.HEURISTIC;
+    //TODO: Fill out parameter descriptions
+    final public static String DESC_INPUT = "";
+    final public static String DESC_OUTPUT = "";
+    final public static String DESC_LASSO_RUNS = "";
+    final public static String DESC_CLIQUE_ATTEMPTS = "";
+
+    private int cliqueAttempts;
+    private int lassoRuns;
+    private DistanceUpdaterFactory updater;
+    private CliqueFinderFactory cliqueFinder;
+    private File input;
+    private File output;
+
+    public LassoOptions() {
+        //initialise with defaults
+        this.cliqueAttempts = this.DEFAULT_CLIQUE_ATTEMPTS;
+        this.lassoRuns = this.DEFAULT_LASSO_RUNS;
+        this.updater = this.DEFAULT_DISTANCE_UPDATER;
+        this.cliqueFinder = this.DEFAULT_CLIQUE_FINDER;
+        this.input = null;
+        this.output = null;
+    }
+
+    public LassoOptions(int lassoRuns, int cliqueAttempts, CliqueFinderFactory cliqueFinder,
+                        DistanceUpdaterFactory updater, File input, File output) {
+        this.cliqueAttempts = cliqueAttempts;
+        this.lassoRuns = lassoRuns;
+        this.cliqueFinder = cliqueFinder;
+        this.updater = updater;
+        this.input = input;
+        this.output = output;
+    }
+
+
+    public int getCliqueAttempts() {
+        return cliqueAttempts;
+    }
+
+    public void setCliqueAttempts(int cliqueAttempts) {
+        this.cliqueAttempts = cliqueAttempts;
+    }
+
+    public int getLassoRuns() {
+        return lassoRuns;
+    }
+
+    public void setLassoRuns(int lassoRuns) {
+        this.lassoRuns = lassoRuns;
+    }
+
+    public DistanceUpdaterFactory getUpdater() {
+        return updater;
+    }
+
+    public void setUpdater(DistanceUpdaterFactory updater) {
+        this.updater = updater;
+    }
+
+    public CliqueFinderFactory getCliqueFinder() {
+        return cliqueFinder;
+    }
+
+    public void setCliqueFinder(CliqueFinderFactory cliqueFinder) {
+        this.cliqueFinder = cliqueFinder;
+    }
+
+    public File getInput() {
+        return input;
+    }
+
+    public void setInput(File input) {
+        this.input = input;
+    }
+
+    public File getOutput() {
+        return output;
+    }
+
+    public void setOutput(File output) {
+        this.output = output;
+    }
 }
