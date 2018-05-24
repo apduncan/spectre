@@ -11,5 +11,60 @@
 
     <artifactId>lasso</artifactId>
 
+    <build>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <testSourceDirectory>src/test/java</testSourceDirectory>
+
+        <plugins>
+
+            <!-- Creates scripts for all platforms that allow the user to easily execute this tool -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>appassembler-maven-plugin</artifactId>
+                <version>1.6</version>
+
+                <configuration>
+                    <platforms>
+                        <platform>${spectre-platform}</platform>
+                    </platforms>
+                    <repositoryLayout>flat</repositoryLayout>
+                    <programs>
+                        <program>
+                            <mainClass>uk.ac.uea.cmp.spectre.lasso.Test</mainClass>
+                            <id>lasso</id>
+                            <jvmSettings>
+                                <extraArguments>
+                                    <extraArgument>-Djava.awt.headless=true</extraArgument>
+                                    <extraArgument>-XX:+UseSerialGC</extraArgument>
+                                </extraArguments>
+                            </jvmSettings>
+                        </program>
+                    </programs>
+                </configuration>
+            </plugin>
+        </plugins>
+
+    </build>
+
+    <dependencies>
+
+        <!-- Spectre -->
+
+        <dependency>
+            <groupId>uk.ac.uea.cmp.spectre</groupId>
+            <artifactId>core</artifactId>
+            <version>1.1.5</version>
+        </dependency>
+
+        <!-- Meta optimizer -->
+
+        <dependency>
+            <groupId>uk.ac.earlham.metaopt</groupId>
+            <artifactId>metaopt</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+
+    </dependencies>
 
 </project>

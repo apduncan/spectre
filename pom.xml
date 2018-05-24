@@ -322,6 +322,7 @@
         <module>net</module>
         <module>qtools</module>
         <module>flatnj</module>
+        <module>lasso</module>
         <module>doc</module>
         <module>dist</module>
 
