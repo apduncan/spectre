@@ -107,7 +107,7 @@ public class LassoDistanceGraphTest {
         cluster.add(lg.getTaxa().get(0));
         cluster.add(lg.getTaxa().get(1));
         cluster.add(lg.getTaxa().get(2));
-        LassoTree clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL);
+        LassoTree clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL.get(new LassoOptions()));
         //Early test to see if functioning at all
         for(NewickNode child : clustered.getBranches()) {
             assertEquals(1, child.getLength(), 0.001);
@@ -115,7 +115,7 @@ public class LassoDistanceGraphTest {
         cluster = new ArrayList<>();
         cluster.add(lg.getTaxa().get(0));
         cluster.add(lg.getTaxa().get(1));
-        clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL);
+        clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL.get(new LassoOptions()));
         clustered.removeInternalIdentifier();
         System.out.println(clustered);
     }

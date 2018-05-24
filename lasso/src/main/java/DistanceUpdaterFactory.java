@@ -18,10 +18,12 @@ import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 public enum DistanceUpdaterFactory {
     MODAL {
         @Override
-        public void update(LassoDistanceGraph graph, Identifier clusterParent, LassoOptions options) {
-            new ModalDistanceUpdater(options).update(graph, clusterParent);
+        public DistanceUpdater get(LassoOptions options) {
+            return new ModalDistanceUpdater(options);
         }
     };
 
-    public abstract void update(LassoDistanceGraph graph, Identifier clusterParent, LassoOptions options);
+    private LassoOptions options;
+
+    public abstract DistanceUpdater get(LassoOptions options);
 }

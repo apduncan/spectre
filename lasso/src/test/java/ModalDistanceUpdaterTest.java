@@ -38,7 +38,7 @@ public class ModalDistanceUpdaterTest {
         cluster.add(lg.getTaxa().get(0));
         cluster.add(lg.getTaxa().get(1));
         cluster.add(lg.getTaxa().get(2));
-        LassoTree clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL);
+        LassoTree clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL.get(new LassoOptions()));
         //test the graph matrix equals the expected reduced matrix
         matrix = lg.getMatrix();
         for(int i = 0; i < matrix.length; i++) {

@@ -159,14 +159,10 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
     /**
      * Perform distance matrix updates with default settings
      * @param cluster The vertices to be joined
-     * @param updater Matrix update method
+     * @param updater Matrix updater object
      * @return The joined cluster
      */
-    public LassoTree joinCluster(List<Identifier> cluster, DistanceUpdaterFactory updater) {
-        return this.joinCluster(cluster, updater, new LassoOptions());
-    }
-
-    public LassoTree joinCluster(List<Identifier> cluster, DistanceUpdaterFactory updater, LassoOptions options) {
+    public LassoTree joinCluster(List<Identifier> cluster, DistanceUpdater updater) {
         //Create a new vertex as parent for cluster items
         Identifier parentId = new Identifier(this.vertexId);
         parentId.setName("internal" + Double.toString(vertexId));
@@ -184,7 +180,7 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
         this.addIdentifier(parentId);
         this.identifierMap.put(parentId, parent);
         //Update distances
-        updater.update(this, parentId, options);
+        updater.update(this, parentId);
         return parent;
     }
 }
