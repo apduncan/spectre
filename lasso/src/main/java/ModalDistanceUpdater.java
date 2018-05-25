@@ -34,11 +34,13 @@ public class ModalDistanceUpdater extends DistanceUpdater {
         //Get cluster represented by parent
         LassoTree cluster = graph.getCluster(clusterParent);
         //Update distances from vertex to cluster parent
-        for(Map.Entry<Identifier, Set<Identifier>> entry :  this.clusterNeighbours(graph, cluster).entrySet()) {
-            Double modal = this.modalDistance(entry.getKey(), entry.getValue(), minWeight, graph);
+        this.clusterNeighbours(graph, cluster).entrySet().parallelStream().forEach((entry) -> {
+            Identifier key = entry.getKey();
+            Set<Identifier> value = entry.getValue();
+            Double modal = this.modalDistance(key, value, minWeight, graph);
             //Set distance between new cluster parent and vertex not in cluster to modal distance
-            graph.setDistance(clusterParent, entry.getKey(), modal);
-        }
+            graph.setDistance(clusterParent, key, modal);
+        });
         //Remove cluster children from graph
         cluster.getBranches().stream().map(NewickNode::getTaxon).forEach(graph::removeTaxon);
         //TODO: distancesUsed and distanceSupport logic

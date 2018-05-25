@@ -45,7 +45,7 @@ public class Test {
         //with disconnected component
         /*double[][] matrix = new double[][] { {0, 2, 0, 4, 0, 0, 0}, {2, 0, 2, 2, 0, 0, 0}, {0, 2, 0, 2, 6, 0, 0},
                 {4, 2, 2, 0, 6, 0, 0}, {0, 0, 6, 6, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 2}, {0, 0, 0, 0, 0, 2, 0} };*/
-        LassoDistanceGraph simpleGraph = new LassoDistanceGraph(new RandomDistanceGenerator().generateDistances(300));
+        LassoDistanceGraph simpleGraph = new LassoDistanceGraph(new RandomDistanceGenerator().generateDistances(503));
         //make some objects
         DistanceUpdater modal = DistanceUpdaterFactory.MODAL.get(new LassoOptions());
         CliqueFinder heuristic = CliqueFinderFactory.HEURISTIC.get(new LassoOptions());

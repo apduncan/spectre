@@ -61,14 +61,8 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
      */
     public Set<Identifier> getNeighbours(Identifier vertexIn) {
         final Identifier vertex = this.getLocalIdentifier(vertexIn);
-        return this.getMap().entrySet().parallelStream()
-                .filter(entry -> entry.getValue() > 0)
-                //get the pair of vertices this distance is between
-                .map(entry -> entry.getKey())
-                //filter any pairs which do not contain vertex
-                .filter(entry -> (entry.getLeft() == vertex || entry.getRight() == vertex))
-                //remove vertex, to leave only the neighbour
-                .map(pair -> pair.getLeft() == vertex ? pair.getRight() : pair.getLeft())
+        return this.getTaxa().parallelStream()
+                .filter(v -> this.getDistance(v, vertex) > 0)
                 .collect(Collectors.toSet());
     }
 
