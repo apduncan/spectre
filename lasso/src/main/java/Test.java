@@ -14,6 +14,9 @@
  */
 
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
@@ -29,7 +32,7 @@ import java.util.Set;
 
 public class Test {
     public static void main(String[] args) {
-        System.out.println("Long testing string here");
+/*        System.out.println("Long testing string here");
         String assign = "Separate string";
         DistanceMatrix fd = new RandomDistanceGenerator().generateDistances(100);
         Nexus nexus = new Nexus();
@@ -44,8 +47,8 @@ public class Test {
         //First try at a lasso method
         //double[][] matrix = new double[][] { {0, 2, 0, 4, 0}, {2, 0, 2, 2, 0}, {0, 2, 0, 2, 6}, {4, 2, 2, 0, 6}, {0, 0, 6, 6, 0} };
         //with disconnected component
-        /*double[][] matrix = new double[][] { {0, 2, 0, 4, 0, 0, 0}, {2, 0, 2, 2, 0, 0, 0}, {0, 2, 0, 2, 6, 0, 0},
-                {4, 2, 2, 0, 6, 0, 0}, {0, 0, 6, 6, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 2}, {0, 0, 0, 0, 0, 2, 0} };*/
+        *//*double[][] matrix = new double[][] { {0, 2, 0, 4, 0, 0, 0}, {2, 0, 2, 2, 0, 0, 0}, {0, 2, 0, 2, 6, 0, 0},
+                {4, 2, 2, 0, 6, 0, 0}, {0, 0, 6, 6, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 2}, {0, 0, 0, 0, 0, 2, 0} };*//*
         LassoDistanceGraph simpleGraph = new LassoDistanceGraph(new RandomDistanceGenerator().generateDistances(503));
         //make some objects
         DistanceUpdater modal = DistanceUpdaterFactory.MODAL.get(new LassoOptions());
@@ -64,6 +67,24 @@ public class Test {
         } while (countEdges > 0);
         stopWatch.stop();
         System.out.println(stopWatch.getTime());
-        System.out.println(simpleGraph.getLargestCluster());
+        System.out.println(simpleGraph.getLargestCluster());*/
+
+        //write a random file to use
+        DistanceMatrix fd = new RandomDistanceGenerator().generateDistances(100);
+        Nexus nexus = new Nexus();
+        nexus.setTaxa(fd.getTaxa());
+        nexus.setDistanceMatrix(fd);
+        try {
+            new NexusWriter().writeDistanceMatrix(new File("/home/hal/Dropbox/Dissertation/random2.nex"), fd);
+        } catch (IOException err) {
+            System.out.println("failed");
+        }
+
+        BasicConfigurator.configure();
+        LogManager.getRootLogger().setLevel(Level.INFO);
+        LassoOptions options = new LassoOptions();
+        options.setInput(new File("/home/hal/Dropbox/Dissertation/random2.nex"));
+        Lasso lasso = new Lasso(options);
+        lasso.run();
     }
 }

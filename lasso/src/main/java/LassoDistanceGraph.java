@@ -13,6 +13,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 public class LassoDistanceGraph extends FlexibleDistanceMatrix {
     private Map<Identifier, LassoTree> identifierMap;
+    private Map<Pair<Identifier, Identifier>, Set<Pair<Identifier, Identifier>>> distanceSupport;
     private int vertexId = -1;
 
     /**
