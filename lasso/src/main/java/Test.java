@@ -13,6 +13,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
+import org.apache.commons.lang3.time.StopWatch;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
@@ -50,15 +51,19 @@ public class Test {
         DistanceUpdater modal = DistanceUpdaterFactory.MODAL.get(new LassoOptions());
         CliqueFinder heuristic = CliqueFinderFactory.HEURISTIC.get(new LassoOptions());
         long countEdges = 0;
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         do {
             //Identify clique
-            LassoDistanceGraph minWeight = new LassoDistanceGraph(simpleGraph);
-            minWeight.retainMinEdges();
-            Set<Identifier> clique = heuristic.find(minWeight);
+            //LassoDistanceGraph minWeight = new LassoDistanceGraph(simpleGraph);
+            //minWeight.retainMinEdges();
+            Set<Identifier> clique = heuristic.find(simpleGraph);
             simpleGraph.joinCluster(new ArrayList<>(clique), modal);
             //Count non-0 edges
             countEdges = simpleGraph.getMap().values().stream().filter(length -> length > 0).count();
         } while (countEdges > 0);
+        stopWatch.stop();
+        System.out.println(stopWatch.getTime());
         System.out.println(simpleGraph.getLargestCluster());
     }
 }

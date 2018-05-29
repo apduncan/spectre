@@ -25,6 +25,10 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
     private Map<Identifier, LassoTree> identifierMap;
     private int vertexId = -1;
 
+    /**
+     * Copy constructor - quite time consuming, avoid using if possible
+     * @param copy Distance graph to copy
+     */
     public LassoDistanceGraph(LassoDistanceGraph copy) {
         super(copy);
         //Copy Lasso specific elements
@@ -46,6 +50,9 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
         this.removeZeroWeights();
     }
 
+    /**
+     * Remove any edges inthe map with weight 0
+     */
     private void removeZeroWeights() {
         Set<Pair<Identifier, Identifier>> remove = this.getMap().entrySet().stream()
                 .filter(entry -> entry.getValue() == 0)
@@ -57,13 +64,26 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
     /**
      * Get any vertices which are adjacent to vertex. Distances of 0 are treated as no edge existing.
      * @param vertexIn Vertex to get neighbours of
+     * @param weight Return neighbours which are connected by edges with only this weighting
      * @return Set of neighbouring vertices
      */
-    public Set<Identifier> getNeighbours(Identifier vertexIn) {
+    public Set<Identifier> getNeighbours(final Identifier vertexIn, final Double weight) {
         final Identifier vertex = this.getLocalIdentifier(vertexIn);
         return this.getTaxa().parallelStream()
-                .filter(v -> this.getDistance(v, vertex) > 0)
+                .filter(v -> {
+                    final double distance = this.getDistance(v, vertex);
+                    return weight == null ? distance > 0 : distance == weight;
+                })
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     * Get any vertices which are adjacent to vertex. Distance of 0 are treated as no edge existing.
+     * @param vertexIn Vertex to get neighbours of
+     * @return Set of neighbouring vertices
+     */
+    public Set<Identifier> getNeighbours(final Identifier vertexIn) {
+        return this.getNeighbours(vertexIn, null);
     }
 
     /**
@@ -204,7 +224,7 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
     }
 
     /**
-     *
+     * Return the largest cluster which has been created so far
      */
     public LassoTree getLargestCluster() {
         return this.identifierMap.values().stream()

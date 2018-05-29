@@ -24,6 +24,8 @@ public class HeuristicCliqueFinder extends CliqueFinder {
     private LassoDistanceGraph graph;
     private Map<Identifier, Set<Identifier>> neighbours;
     private Set<Identifier> visited;
+    private double minWeight;
+    private Map<Pair<Identifier, Identifier>, Double> distancesUsed;
 
     public HeuristicCliqueFinder(LassoOptions options) {
         super(options);
@@ -45,6 +47,7 @@ public class HeuristicCliqueFinder extends CliqueFinder {
             return new HashSet<Identifier>();
         this.graph = graph;
         this.neighbours = new HashMap<>();
+        this.minWeight = this.graph.getMinEdgeWeight();
         List<Set<Identifier>> found = new ArrayList<>();
         for(int i = 0; i < this.getOptions().getCliqueAttempts(); i++) {
             //Get random start
@@ -102,7 +105,7 @@ public class HeuristicCliqueFinder extends CliqueFinder {
     private Pair<Identifier, Identifier> randomEdge(Set<Pair<Identifier, Identifier>> exclude) {
         //Remove any 0 weight edges from the map
         Map<Pair<Identifier, Identifier>, Double> realEdges = this.graph.getMap().entrySet().stream()
-                .filter(entry -> entry.getValue() > 0)
+                .filter(entry -> entry.getValue() == this.minWeight)
                 .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
         Set<Pair<Identifier, Identifier>> keys = realEdges.keySet();
         keys.removeAll(exclude);
@@ -125,7 +128,7 @@ public class HeuristicCliqueFinder extends CliqueFinder {
         if(this.neighbours.containsKey(vertex)) {
             return new HashSet<>(this.neighbours.get(vertex));
         } else {
-            Set<Identifier> neighbours = this.graph.getNeighbours(vertex);
+            Set<Identifier> neighbours = this.graph.getNeighbours(vertex, this.minWeight);
             this.neighbours.put(vertex, neighbours);
             return new HashSet<>(neighbours);
         }
@@ -144,6 +147,10 @@ public class HeuristicCliqueFinder extends CliqueFinder {
         return new HashSet<>(this.visited);
     }
 
+    /**
+     * Visit all vertices connected to this vertex and add them to the set of connected vertices
+     * @param vertex Vertex to visit
+     */
     private void traverse(Identifier vertex) {
         this.visited.add(vertex);
         Set<Identifier> neighbours = this.getNeighbours(vertex);

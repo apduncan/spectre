@@ -13,19 +13,21 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
+import org.apache.commons.lang3.tuple.Pair;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.tree.newick.NewickNode;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ModalDistanceUpdater extends DistanceUpdater {
+    private Map<Pair<Identifier, Identifier>, Double> distancesUsed;
+    private Set<Pair<Identifier, Identifier>> distanceSupport;
 
     public ModalDistanceUpdater(LassoOptions options) {
         super(options);
+        this.distancesUsed = new HashMap<>();
+        this.distanceSupport = new HashSet<>();
     }
 
     @Override
