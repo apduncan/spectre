@@ -20,6 +20,7 @@ import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 
@@ -31,18 +32,33 @@ public class ModalDistanceUpdaterTest {
 
     @Test
     public void update() {
-        double[][] matrix = new double[][] { {0, 2, 2, 0}, {2, 0, 2, 0}, {2, 2, 0, 4}, {0, 0, 4, 0} };
-        double[][] reducedMatrix = new double[][] { {0, 4}, {4, 0} };
+        double[][] reducedMatrix = new double[][] { {0, 4, 4, 6}, {4, 0, 4, 0}, {4, 4, 0, 0}, {6, 0, 0, 0} };
+        double[][] step2 = new double[][] {{0, 6}, {6,0}};
+        double[][] matrix = new double[][] { {0, 2, 2, 0, 0, 0}, {2, 0, 2, 0, 0, 0}, {2, 2, 0, 6, 0, 0}, {0, 0, 6, 0, 4, 4}, {0, 0, 0, 4, 0, 4}, {0, 0, 0, 4, 4, 0} };
         LassoDistanceGraph lg = new LassoDistanceGraph(new FlexibleDistanceMatrix(matrix));
         List<Identifier> cluster = new ArrayList<>();
         cluster.add(lg.getTaxa().get(0));
         cluster.add(lg.getTaxa().get(1));
         cluster.add(lg.getTaxa().get(2));
         LassoTree clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL.get(new LassoOptions()));
-        //test the graph matrix equals the expected reduced matrix
+        //Test the graph matrix equals the expected reduced matrix, after clustering {a, b, c}
         matrix = lg.getMatrix();
         for(int i = 0; i < matrix.length; i++) {
             assertArrayEquals(reducedMatrix[i], matrix[i], 0.001);
         }
+        cluster.removeIf(v -> true);
+        IntStream.range(0, 3).forEach(i -> cluster.add(lg.getTaxa().get(i)));
+        clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL.get(new LassoOptions()));
+        //Test the graph matrix equals the expected 2nd step reduction
+        matrix = lg.getMatrix();
+        for(int i = 0; i < matrix.length; i++) {
+            assertArrayEquals(step2[i], matrix[i], 0.001);
+        }
+        cluster.removeIf(v -> true);
+        IntStream.range(0, 2).forEach(i -> cluster.add(lg.getTaxa().get(i)));
+        clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL.get(new LassoOptions()));
+        //Test the graph has no remaining edges
+        assertEquals(0, lg.getMap().size());
+        System.out.println(clustered);
     }
 }

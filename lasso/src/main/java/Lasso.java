@@ -15,6 +15,7 @@
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
@@ -27,10 +28,8 @@ import uk.ac.uea.cmp.spectre.core.ui.gui.RunnableTool;
 import uk.ac.uea.cmp.spectre.core.ui.gui.StatusTracker;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Lasso extends RunnableTool {
     private static Logger logger = LoggerFactory.getLogger(Lasso.class);
@@ -110,6 +109,7 @@ public class Lasso extends RunnableTool {
         //Instantiate clique finder and distance updater objects based on options
         DistanceUpdater updater = this.getOptions().getUpdater().get(this.getOptions());
         CliqueFinder finder = this.getOptions().getCliqueFinder().get(this.getOptions());
+        final LassoDistanceGraph original = new LassoDistanceGraph(matrix);
         //Run user defined number of times, then select result with most taxa
         for(int i = 0; i < this.getOptions().getLassoRuns(); i++) {
             this.notifyUser("Executing Lasso run " + (i+1) + " of " + this.getOptions().getLassoRuns());
@@ -121,8 +121,10 @@ public class Lasso extends RunnableTool {
                 graph.joinCluster(new ArrayList<>(clique), updater);
                 countEdges = graph.getMap().values().stream().filter(length -> length > 0).count();
             } while(countEdges > 0);
-            //TODO: distancesUsed need to go into result
-            results.add(new LassoResult(graph.getLargestCluster(), null));
+            //Map cords to weights
+            Map<Pair<Identifier, Identifier>, Double> distances = graph.getDistancesUsed().parallelStream().
+                    collect(Collectors.toMap(pair -> pair, pair -> original.getDistance(pair.getLeft(), pair.getRight())));
+            results.add(new LassoResult(graph.getLargestCluster(), distances));
         }
         //Return result with most taxa
         return results.parallelStream().min(Comparator.comparingInt(a -> a.getTree().getNbTaxa())).get();

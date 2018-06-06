@@ -25,6 +25,8 @@ public class LassoOptions {
     final public static String DESC_OUTPUT = "";
     final public static String DESC_LASSO_RUNS = "";
     final public static String DESC_CLIQUE_ATTEMPTS = "";
+    final public static String DESC_DISTANCE_UPDATER = "";
+    final public static String DESC_CLIQUE_FINDER = "";
 
     private int cliqueAttempts;
     private int lassoRuns;

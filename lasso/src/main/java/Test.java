@@ -71,11 +71,16 @@ public class Test {
 
         //write a random file to use
         DistanceMatrix fd = new RandomDistanceGenerator().generateDistances(100);
+        double[][] reducedMatrix = new double[][] { {0, 4}, {4, 0} };
+        double[][] matrix = new double[][] { {0, 2, 2, 0, 0, 0}, {2, 0, 2, 0, 0, 0}, {2, 2, 0, 6, 0, 0}, {0, 0, 6, 0, 4, 4}, {0, 0, 0, 0, 4, 0, 4}, {0, 0, 0, 4, 4, 0} };
+        double[][] modalProb = new double[][] { {0, 2, 2, 0 }, {2, 0, 2, 0}, {2, 2, 0, 2}, {0, 0, 2, 0} };
+        LassoDistanceGraph lg = new LassoDistanceGraph(new FlexibleDistanceMatrix(modalProb));
+//        lg.setDistance("D", "E", 4);
         Nexus nexus = new Nexus();
-        nexus.setTaxa(fd.getTaxa());
-        nexus.setDistanceMatrix(fd);
+        nexus.setTaxa(lg.getTaxa());
+        nexus.setDistanceMatrix(lg);
         try {
-            new NexusWriter().writeDistanceMatrix(new File("/home/hal/Dropbox/Dissertation/random2.nex"), fd);
+            new NexusWriter().writeDistanceMatrix(new File("/home/hal/Dropbox/Dissertation/spectre/spectre/lasso/src/test/resources/random100.nex"), fd);
         } catch (IOException err) {
             System.out.println("failed");
         }
@@ -83,8 +88,32 @@ public class Test {
         BasicConfigurator.configure();
         LogManager.getRootLogger().setLevel(Level.INFO);
         LassoOptions options = new LassoOptions();
-        options.setInput(new File("/home/hal/Dropbox/Dissertation/random2.nex"));
+        options.setLassoRuns(2);
+        options.setInput(new File("/home/hal/Dropbox/Dissertation/random503.nex"));
+        options.setOutput(new File("/home/hal//Dropbox/Dissertation/outputtest.nex"));
         Lasso lasso = new Lasso(options);
-        lasso.run();
+//        lasso.run();
+
+        //Generate nexus file for graph from paper, adapted to have only one solution
+//        double[][] exampleMatrix = {{0, 2, 0, 4, 0}, {2, 0, 2, 2, 6}, {0, 2, 0, 2, 6}, {4, 2, 2, 0, 8}, {0, 6, 6, 8, 0}};
+//        FlexibleDistanceMatrix exampleMat = new FlexibleDistanceMatrix(exampleMatrix);
+//        Nexus nexus = new Nexus();
+//        nexus.setDistanceMatrix(exampleMat);
+//        try {
+//            new NexusWriter().writeDistanceMatrix(new File("/home/hal/Dropbox/Dissertation/example-mod.nex"), exampleMat);
+//        } catch(IOException e) {
+//            System.out.println("Fail write");
+//        }
+        //Generate nexus file for two separate components test
+//        double[][] exampleMatrix = {{0, 1, 0, 0, 0}, {1, 0, 0, 0, 0}, {0, 0, 0, 1, 1}, {0, 0, 1, 0, 1}, {0, 0, 1, 1, 0}};
+//        FlexibleDistanceMatrix exampleMat = new FlexibleDistanceMatrix(exampleMatrix);
+//        Nexus nexus = new Nexus();
+//        nexus.setDistanceMatrix(exampleMat);
+//        try {
+//            new NexusWriter().writeDistanceMatrix(new File("/home/hal/Dropbox/Dissertation/spectre/spectre/lasso/src/test/resources/disconnected.nex"), exampleMat);
+//        } catch(IOException e) {
+//            System.out.println("Fail write");
+//        }
+
     }
 }

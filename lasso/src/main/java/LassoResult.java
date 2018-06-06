@@ -15,10 +15,18 @@
 
 import org.apache.commons.lang3.tuple.Pair;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
+import uk.ac.uea.cmp.spectre.core.ds.IdentifierList;
+import uk.ac.uea.cmp.spectre.core.ds.tree.newick.NewickTree;
+import uk.ac.uea.cmp.spectre.core.io.nexus.Nexus;
+import uk.ac.uea.cmp.spectre.core.io.nexus.NexusWriter;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class LassoResult {
     private LassoTree tree;
@@ -27,13 +35,46 @@ public class LassoResult {
     public LassoResult(LassoTree tree, Map<Pair<Identifier, Identifier>, Double> distancesUsed) {
         this.tree = tree;
         tree.removeInternalIdentifier();
+        distancesUsed = this.removeNonLeafTaxa(distancesUsed, new HashSet<>(this.tree.findAllTaxa()));
         this.distancesUsed = distancesUsed;
     }
 
-    public void save(File output) {
-        //TODO: Code to write to file
-        System.out.println("Not implemented - writing tree to screen");
-        System.out.println(tree.toString());
+    /**
+     * Removes entries from distancesUsed where one or both taxa do not appear in the set taxa.
+     * Modifies distancesUsed in place.
+     * @param distancesUsed The set of distance used when constructing all cluster in a Gamma L graph
+     * @param taxa The taxa set of the largest tree constructed
+     */
+    private Map<Pair<Identifier, Identifier>, Double> removeNonLeafTaxa(
+            Map<Pair<Identifier, Identifier>, Double> distancesUsed, Set<Identifier> taxa) {
+        Set<Pair<Identifier, Identifier>> remove = distancesUsed.keySet().stream()
+                .filter(pair -> !(taxa.contains(pair.getLeft()) || taxa.contains(pair.getRight())))
+                .collect(Collectors.toSet());
+        remove.forEach(distancesUsed::remove);
+        return distancesUsed;
+    }
+
+    /**
+     * Write the tree and corresponding strong lasso (if update methods permits) to disk, in Nexus format.
+     * @param output File to write to
+     * @throws IOException
+     */
+    public void save(File output) throws IOException {
+        //Nexus does not write treeds, but does support writing custom blocks
+        NexusWriter writer = new NexusWriter();
+        writer.appendHeader();
+        writer.append(this.getTree().findAllTaxa());
+        writer.appendLine("");
+        //Write tree in newick format
+        writer.appendLine("BEGIN TREES;");
+        writer.appendLine("  TREE tree1 = " + this.getTree().toString() + ";");
+        //Writer the strong lasso in comments
+        writer.appendLine("  [Strong Lasso shown below. Cord between taxa a and b with associated weight 4 written a -> b, 4]");
+        this.distancesUsed.entrySet().stream()
+                .map(entry -> "  [" + entry.getKey().getLeft().getName() + " -> " + entry.getKey().getRight().getName() + ", " + entry.getValue().toString() + "]")
+                .forEach(writer::appendLine);
+        writer.appendLine("END; [Trees]");
+        writer.write(output);
     }
 
     public LassoTree getTree() {

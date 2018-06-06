@@ -29,7 +29,7 @@ public abstract class DistanceUpdater {
         this.options = options;
     }
 
-    public abstract void update(LassoDistanceGraph graph, Identifier clusterParent);
+    public abstract Map<Identifier, Set<Identifier>> update(LassoDistanceGraph graph, Identifier clusterParent);
 
     /**
      * Find vertices which neighbour any member of the cluster, and make a set of the vertices in the cluster

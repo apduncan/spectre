@@ -25,7 +25,8 @@ import java.util.stream.Collectors;
 public class LassoDistanceGraph extends FlexibleDistanceMatrix {
     private Map<Identifier, LassoTree> identifierMap;
     private Map<Pair<Identifier, Identifier>, Set<Pair<Identifier, Identifier>>> distanceSupport;
-    private int vertexId = -1;
+    private Set<Pair<Identifier, Identifier>> distancesUsed;
+    private int vertexId = -2;
 
     /**
      * Copy constructor - quite time consuming, avoid using if possible
@@ -36,6 +37,8 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
         //Copy Lasso specific elements
         //Copy identifier - cluster mapping
         identifierMap = new HashMap<>();
+        distanceSupport = new HashMap<>();
+        distancesUsed = new HashSet<>();
         copy.identifierMap.entrySet().parallelStream()
                 .forEach((entry) -> identifierMap.put(new Identifier(entry.getKey()), new LassoTree(entry.getValue())));
         this.removeZeroWeights();
@@ -44,12 +47,21 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
     public LassoDistanceGraph(DistanceMatrix matrix) {
         super(matrix);
         identifierMap = new HashMap<>();
+        distanceSupport = new HashMap<>();
+        distancesUsed = new HashSet<>();
         this.removeZeroWeights();
     }
 
     public LassoDistanceGraph(double[][] matrix) {
         super(matrix);
+        identifierMap = new HashMap<>();
+        distanceSupport = new HashMap<>();
+        distancesUsed = new HashSet<>();
         this.removeZeroWeights();
+    }
+
+    public Set<Pair<Identifier, Identifier>> getDistancesUsed() {
+        return this.distancesUsed;
     }
 
     /**
@@ -216,13 +228,45 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
             LassoTree child = getCluster(identifier);
             child.setLength(parentHeight - child.getRootHeight());
             parent.addBranch(child);
+            //Work out which distances weres used for each pair being joined in the cluster
+            cluster.stream().filter(v -> !v.equals(identifier)).forEach(v -> this.distanceUsed(v, identifier));
         }
         //Add parent to graph
         this.addIdentifier(parentId);
         this.identifierMap.put(parentId, parent);
         //Update distances
-        updater.update(this, parentId);
+        Map<Identifier, Set<Identifier>> retained = updater.update(this, parentId);
+        //Update mapping of which cords support the cluster - leaf distances in graph
+        retained.entrySet().stream()
+                .forEach(entry -> {
+                    Pair<Identifier, Identifier> newPair = this.getSortedPair(parentId, entry.getKey());
+                    this.distanceSupport.put(newPair, new HashSet<>());
+                    entry.getValue().stream().forEach(clusterVertex -> {
+                        Pair<Identifier, Identifier> pair = this.getSortedPair(clusterVertex, entry.getKey());
+                        Set<Pair<Identifier, Identifier>> supp = this.distanceSupport.get(pair);
+                        this.distanceSupport.remove(pair);
+                        //add the previously supporting distances
+                        if(supp != null)
+                            this.distanceSupport.get(newPair).addAll(supp);
+                        if(clusterVertex.getId() >= 0 && entry.getKey().getId() >= 0)
+                            this.distanceSupport.get(newPair).add(this.getSortedPair(clusterVertex, entry.getKey()));
+                    });
+                });
         return parent;
+    }
+
+    protected void distanceUsed(Identifier vertex1, Identifier vertex2) {
+        Pair<Identifier, Identifier> pair = this.getSortedPair(vertex1, vertex2);
+        if(this.isTaxon(vertex1) && this.isTaxon(vertex2)) {
+            //Both are, so this is one of the original cords
+            this.distancesUsed.add(pair);
+        } else if ((!this.isTaxon(vertex1) || (!this.isTaxon(vertex2)))) {
+            //Both are clusters, all the distances between them are now used
+            Set<Pair<Identifier, Identifier>> all = this.distanceSupport.get(pair);
+            if(all != null)
+                this.distancesUsed.addAll(this.distanceSupport.get(pair));
+//            this.distanceSupport.remove(pair);
+        }
     }
 
     /**

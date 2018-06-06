@@ -28,7 +28,7 @@ public class LassoTree extends NewickNode {
         if(copy.taxon != null)
             this.taxon = new Identifier(copy.taxon);
         //Recursively copy tree
-        copy.branches.parallelStream().forEach((node) -> this.branches.add(new LassoTree((LassoTree)node)));
+        copy.branches.stream().forEach((node) -> this.branches.add(new LassoTree((LassoTree)node)));
     }
 
     public LassoTree(Identifier vertex) {
@@ -46,7 +46,7 @@ public class LassoTree extends NewickNode {
     public void removeInternalIdentifier() {
         if(!this.isLeaf()) {
             this.setTaxon(null);
-            this.getBranches().stream().map(LassoTree.class::cast).forEach(LassoTree::removeInternalIdentifier);
+            this.getBranches().stream().map(LassoTree.class::cast).forEach(tree -> tree.removeInternalIdentifier());
         }
     }
 }

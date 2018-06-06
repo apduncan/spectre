@@ -15,22 +15,40 @@
 
 import org.junit.Before;
 import org.junit.Test;
+import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
+import uk.ac.uea.cmp.spectre.core.ds.distance.RandomDistanceGenerator;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
 public class HeuristicCliqueFinderTest {
     private LassoDistanceGraph simpleGraph;
+    private LassoDistanceGraph singleValidClique;
 
     @Before
     public void setUp() throws Exception {
-        double[][] matrix = new double[][] { {0, 2, 2, 3}, {2, 0, 2, 0}, {2, 2, 0, 4}, {3, 0, 4, 0} };
+        double[][] matrix = new double[][]{{0, 2, 2, 0}, {2, 0, 2, 0}, {2, 2, 0, 4}, {0, 0, 4, 0}};
+        double[][] singleValid = new double[][]{{0, 2, 0}, {2, 0, 3}, {0, 3, 0}};
         this.simpleGraph = new LassoDistanceGraph(new FlexibleDistanceMatrix(matrix));
+        this.singleValidClique = new LassoDistanceGraph(new FlexibleDistanceMatrix(singleValid));
     }
 
     @Test
     public void find() {
         CliqueFinder heuristic = CliqueFinderFactory.HEURISTIC.get(new LassoOptions());
-        System.out.println(heuristic.find(this.simpleGraph));
+        Set<Identifier> expected = new HashSet<>();
+        for(int i = 0; i < 3; i++) {
+            expected.add(this.simpleGraph.getTaxa().get(i));
+        }
+        Set<Identifier> clique = heuristic.find(this.simpleGraph);
+        assertTrue(clique.containsAll(expected) && clique.size() == expected.size());
+        expected.removeIf(v -> true);
+        expected.add(this.singleValidClique.getTaxa().get(0));
+        expected.add(this.singleValidClique.getTaxa().get(1));
+        clique = heuristic.find(this.singleValidClique);
+        assertTrue(clique.containsAll(expected) && clique.size() == expected.size());
     }
 }
