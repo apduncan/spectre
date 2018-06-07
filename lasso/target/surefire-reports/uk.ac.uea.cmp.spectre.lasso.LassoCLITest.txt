@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: uk.ac.uea.cmp.spectre.lasso.LassoCLITest
--------------------------------------------------------------------------------
-Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.207 sec - in uk.ac.uea.cmp.spectre.lasso.LassoCLITest
