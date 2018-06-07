@@ -91,8 +91,8 @@ public class LassoGUI extends JFrame implements ToolHost {
         btnExecute = new javax.swing.JButton();
         lblProgress = new javax.swing.JLabel();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("uk.ac.uea.cmp.spectre.lasso.Lasso");
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Lasso");
 
         pnlClique.setBorder(javax.swing.BorderFactory.createTitledBorder("Clique Options"));
         pnlClique.setToolTipText("");
@@ -225,7 +225,7 @@ public class LassoGUI extends JFrame implements ToolHost {
                                 .addComponent(lblDistanceAlg))
         );
 
-        pnlLasso.setBorder(javax.swing.BorderFactory.createTitledBorder("uk.ac.uea.cmp.spectre.lasso.Lasso Options"));
+        pnlLasso.setBorder(javax.swing.BorderFactory.createTitledBorder("Lasso Options"));
 
         lblRuns.setText("Runs");
 
@@ -349,7 +349,7 @@ public class LassoGUI extends JFrame implements ToolHost {
         try {
             runs = Integer.class.cast(snprRuns.getValue());
         } catch (Exception e) {
-            showErrorDialog("Number of uk.ac.uea.cmp.spectre.lasso.Lasso runs invalid");
+            showErrorDialog("Number of Lasso runs invalid");
             return;
         }
         if(runs < 1 || attempts < 1) {
@@ -372,7 +372,7 @@ public class LassoGUI extends JFrame implements ToolHost {
             return;
         }
 
-        // Create uk.ac.uea.cmp.spectre.lasso.LassoOptions object
+        // Create LassoOptions object
         LassoOptions options = new LassoOptions();
         options.setInput(input);
         options.setOutput(output);
@@ -381,7 +381,7 @@ public class LassoGUI extends JFrame implements ToolHost {
         options.setCliqueFinder(finder);
         options.setUpdater(updater);
 
-        // Execute uk.ac.uea.cmp.spectre.lasso.Lasso
+        // Execute Lasso
         runner.runLasso(options, tracker);
     }
 
@@ -441,7 +441,7 @@ public class LassoGUI extends JFrame implements ToolHost {
     }
 
     private void initTooltips() {
-        //Set up tooltips on some elements based on uk.ac.uea.cmp.spectre.lasso.LassoOptions
+        //Set up tooltips on some elements based on LassoOptions
         lblCliqueAlg.setToolTipText(LassoOptions.DESC_CLIQUE_FINDER);
         cmbCliqueAlg.setToolTipText(LassoOptions.DESC_CLIQUE_FINDER);
         lblDistanceAlg.setToolTipText(LassoOptions.DESC_DISTANCE_UPDATER);
@@ -470,7 +470,7 @@ public class LassoGUI extends JFrame implements ToolHost {
     public void showErrorDialog(String message) {
         JOptionPane.showMessageDialog(this,
                 message,
-                "uk.ac.uea.cmp.spectre.lasso.Lasso Error",
+                "Lasso Error",
                 JOptionPane.ERROR_MESSAGE);
     }
 

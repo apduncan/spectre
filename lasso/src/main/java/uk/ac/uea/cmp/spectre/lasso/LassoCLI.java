@@ -65,7 +65,7 @@ public class LassoCLI {
 
         //TODO: CommandLine uk.ac.uea.cmp.spectre.lasso.Lasso description
         CommandLine commandLine = new CommandLineHelper().startApp(createOptions(), "netmake [options] <distance_matrix_file>",
-                "Brief uk.ac.uea.cmp.spectre.lasso.Lasso description here.\n" +
+                "Brief Lasso description here.\n" +
                         "Input can be either nexus format file containing a distances block, or a phylip format distance matrix.", args);
 
         // If we didn't return a command line object then just return.  Probably the user requested help or
@@ -125,7 +125,7 @@ public class LassoCLI {
                 }
             }
 
-            // Run uk.ac.uea.cmp.spectre.lasso.Lasso
+            // Run Lasso
             new Lasso(options).run();
 
         } catch (Exception e) {

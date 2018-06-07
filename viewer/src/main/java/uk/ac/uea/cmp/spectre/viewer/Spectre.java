@@ -51,6 +51,7 @@ import uk.ac.uea.cmp.spectre.flatnj.FlatNJGUI;
 import uk.ac.uea.cmp.spectre.net.netmake.NetMakeGUI;
 import uk.ac.uea.cmp.spectre.net.netme.NetMEGUI;
 import uk.ac.uea.cmp.spectre.qtools.superq.SuperQGUI;
+import uk.ac.uea.cmp.spectre.lasso.LassoGUI;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -183,6 +184,7 @@ public class Spectre extends javax.swing.JFrame implements DropTargetListener {
     private javax.swing.JMenuItem mnuToolsNetme;
     private javax.swing.JMenuItem mnuToolsFlatnj;
     private javax.swing.JMenuItem mnuToolsSuperq;
+    private javax.swing.JMenuItem mnuToolsLasso;
     private javax.swing.JMenu mnuHelp;
     private javax.swing.JMenuItem mnuHelpHelp;
     private javax.swing.JMenuItem mnuHelpAbout;
@@ -1031,6 +1033,31 @@ public class Spectre extends javax.swing.JFrame implements DropTargetListener {
             }
         });
         mnuTools.add(mnuToolsSuperq);
+
+        mnuToolsLasso = new javax.swing.JMenuItem();
+        mnuToolsLasso.setText("Lasso");
+        mnuToolsLasso.setMnemonic('L');
+        mnuToolsLasso.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    EventQueue.invokeLater(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            LassoGUI lasso = new LassoGUI();
+                            lasso.setVisible(true);
+                            // Code to trigger drawing of tree would go here
+                        }
+                    });
+                    return;
+                } catch (Exception ex) {
+                    errorMessage("Unexpected problem occurred with Lasso", ex);
+                }
+            }
+        });
+        mnuTools.add(mnuToolsLasso);
 
         menuBar.add(mnuTools);
 
