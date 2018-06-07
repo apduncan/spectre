@@ -21,12 +21,12 @@ public class LassoOptions {
     final public static DistanceUpdaterFactory DEFAULT_DISTANCE_UPDATER = DistanceUpdaterFactory.MODAL;
     final public static CliqueFinderFactory DEFAULT_CLIQUE_FINDER = CliqueFinderFactory.HEURISTIC;
     //TODO: Fill out parameter descriptions
-    final public static String DESC_INPUT = "";
-    final public static String DESC_OUTPUT = "";
-    final public static String DESC_LASSO_RUNS = "";
-    final public static String DESC_CLIQUE_ATTEMPTS = "";
-    final public static String DESC_DISTANCE_UPDATER = "";
-    final public static String DESC_CLIQUE_FINDER = "";
+    final public static String DESC_INPUT = "Input help";
+    final public static String DESC_OUTPUT = "Output help";
+    final public static String DESC_LASSO_RUNS = "Runs help";
+    final public static String DESC_CLIQUE_ATTEMPTS = "Attempts help";
+    final public static String DESC_DISTANCE_UPDATER = "Updater help";
+    final public static String DESC_CLIQUE_FINDER = "Clique help";
 
     private int cliqueAttempts;
     private int lassoRuns;

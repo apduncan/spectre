@@ -87,16 +87,16 @@ public class Lasso extends RunnableTool {
             if(matrix == null)
                 throw new IOException("Could not find distance matrix in input");
 
-            logger.info("Loaded distance matrix containing " + matrix.size() + " taxa");
+            this.notifyUser("Loaded distance matrix containing " + matrix.size() + " taxa");
             this.notifyUser("Executing Lasso");
             LassoResult result = this.execute(matrix);
             this.notifyUser("Saving results to disk");
             result.save(this.options.getOutput());
             stopwatch.stop();
-            logger.info("Completed - Run time: " + stopwatch.toString());
-
+            this.notifyUser("Completed - Run time: " + stopwatch.toString());
+            this.trackerFinished(true);
         } catch(Exception e) {
-            logger.error(e.getMessage());
+            this.notifyUser(e.getMessage());
             this.setError(e);
             this.trackerFinished(false);
         } finally {
