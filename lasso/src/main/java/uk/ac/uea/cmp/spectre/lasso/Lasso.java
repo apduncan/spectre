@@ -104,7 +104,7 @@ public class Lasso extends RunnableTool {
                 throw new IOException("Could not find distance matrix in input");
 
             this.notifyUser("Loaded distance matrix containing " + matrix.size() + " taxa");
-            this.notifyUser("Executing uk.ac.uea.cmp.spectre.lasso.Lasso");
+            this.notifyUser("Executing Lasso");
             LassoResult result = this.execute(matrix);
             this.notifyUser("Saving results to disk");
             result.save(this.options.getOutput());
@@ -128,7 +128,7 @@ public class Lasso extends RunnableTool {
         final LassoDistanceGraph original = new LassoDistanceGraph(matrix);
         //Run user defined number of times, then select result with most taxa
         for(int i = 0; i < this.getOptions().getLassoRuns(); i++) {
-            this.notifyUser("Executing uk.ac.uea.cmp.spectre.lasso.Lasso run " + (i+1) + " of " + this.getOptions().getLassoRuns());
+            this.notifyUser("Executing Lasso run " + (i+1) + " of " + this.getOptions().getLassoRuns());
             //Make a new copy of the graph from the input matrix
             LassoDistanceGraph graph = new LassoDistanceGraph(matrix);
             long countEdges = 0;
