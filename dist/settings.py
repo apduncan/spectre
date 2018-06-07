@@ -8,7 +8,7 @@ import os.path
 # Example settings file for dmgbuild
 #
 
-# Use like this: dmgbuild -s settings.py "Test Volume" test.dmg
+# Use like this: dmgbuild -s settings.py "uk.ac.uea.cmp.spectre.lasso.Test Volume" test.dmg
 
 # You can actually use this file for your own application (not just TextEdit)
 # by doing e.g.
@@ -209,7 +209,7 @@ list_column_sort_directions = {
 # \\pard\\pardeftab720\\sa160\\partightenfactor0
 
 # \\f0\\b\\fs60 \\cf2 \\expnd0\\expndtw0\\kerning0
-# \\up0 \\nosupersub \\ulnone \\outl0\\strokewidth0 \\strokec2 Test License\\
+# \\up0 \\nosupersub \\ulnone \\outl0\\strokewidth0 \\strokec2 uk.ac.uea.cmp.spectre.lasso.Test License\\
 # \\pard\\pardeftab720\\sa160\\partightenfactor0
 
 # \\fs36 \\cf2 \\strokec2 What is this?\\

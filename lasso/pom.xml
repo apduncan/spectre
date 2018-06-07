@@ -8,8 +8,10 @@
         <version>1.1.5</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>lasso</artifactId>
+    <version>1.1.5</version>
+
+    <name>Spectre: Lasso</name>
 
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
@@ -30,7 +32,7 @@
                     <repositoryLayout>flat</repositoryLayout>
                     <programs>
                         <program>
-                            <mainClass>uk.ac.uea.cmp.spectre.lasso.Test</mainClass>
+                            <mainClass>uk.ac.uea.cmp.spectre.lasso.LassoCLI</mainClass>
                             <id>lasso</id>
                             <jvmSettings>
                                 <extraArguments>
@@ -41,6 +43,26 @@
                         </program>
                     </programs>
                 </configuration>
+            </plugin>
+            <!-- Makes sure output is executable -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <id>add-execute-perms</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <chmod file="${build-dir}/bin/lasso" perm="755" />
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
 

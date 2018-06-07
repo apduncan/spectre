@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="maven-antrun-" default="main"  >
+<target name="main">
+  <chmod file="/home/hal/Dropbox/Dissertation/spectre/spectre/lasso/../build/spectre-1.1.5/bin/lasso" perm="755"/>
+</target>
+</project>
