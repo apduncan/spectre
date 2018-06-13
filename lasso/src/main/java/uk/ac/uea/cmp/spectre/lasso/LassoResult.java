@@ -65,7 +65,7 @@ public class LassoResult {
         writer.appendLine("BEGIN TREES;");
         writer.appendLine("  TREE tree1 = " + this.getTree().toString() + ";");
         //Writer the strong lasso in comments
-        writer.appendLine("  [Strong uk.ac.uea.cmp.spectre.lasso.Lasso shown below. Cord between taxa a and b with associated weight 4 written a -> b, 4]");
+        writer.appendLine("  [Strong Lasso shown below. Cord between taxa a and b with associated weight 4 written a -> b, 4]");
         this.distancesUsed.entrySet().stream()
                 .map(entry -> "  [" + entry.getKey().getLeft().getName() + " -> " + entry.getKey().getRight().getName() + ", " + entry.getValue().toString() + "]")
                 .forEach(writer::appendLine);

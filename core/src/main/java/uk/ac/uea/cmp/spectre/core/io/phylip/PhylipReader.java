@@ -128,6 +128,7 @@ public class PhylipReader extends AbstractSpectreReader {
                 String trimmedPart = parts[j].trim();
 
                 if (!trimmedPart.isEmpty()) {
+                    trimmedPart = trimmedPart.equals("?") ? "0.0" : trimmedPart;
                     distanceMatrix.setDistance(dmRow, dmCol++, Double.parseDouble(trimmedPart));
                 }
             }
