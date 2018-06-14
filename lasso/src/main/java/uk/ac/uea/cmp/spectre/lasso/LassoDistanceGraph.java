@@ -281,4 +281,8 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
                     else { return a; }
                 });
     }
+
+    public List<LassoTree> getAllClusters() {
+        return new ArrayList<>(this.identifierMap.values());
+    }
 }

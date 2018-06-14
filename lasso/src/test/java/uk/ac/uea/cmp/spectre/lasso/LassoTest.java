@@ -67,7 +67,7 @@ public class LassoTest {
                 "TREE tree1 = (((C:1.0,D:1.0,B:1.0):1.0,A:2.0):1.0,E:3.0):0.0;"
         };
         //Trim whitespace from outputlines
-        outputLines = outputLines.stream().map(String::trim).collect(Collectors.toList());
+        outputLines = outputLines.stream().peek(System.out::println).map(String::trim).collect(Collectors.toList());
         //Check strong lasso matches what is expected
         long matched = Stream.of(expectedLasso).filter(outputLines::contains).count();
         assertEquals(expectedLasso.length, matched);
@@ -104,6 +104,43 @@ public class LassoTest {
         };
         //Trim whitespace from outputlines
         outputLines = outputLines.stream().map(String::trim).collect(Collectors.toList());
+        //Check strong lasso matches what is expected
+        long matched = Stream.of(expectedLasso).filter(outputLines::contains).count();
+        assertEquals(expectedLasso.length, matched);
+        //Check tree is isomorphically equivalent to what is expected
+        Optional<String> matchedTree = Stream.of(expectedNewicks).filter(outputLines::contains).findFirst();
+        assertTrue(matchedTree.isPresent());
+    }
+
+    @Test
+    public void run3() throws IOException {
+        //As test 1, but with BronKerbosch clique finder
+        //File input = FileUtils.toFile(LassoTest.class.getResource("/random503.nex"));
+        File input = new File("/home/hal/Dropbox/Dissertation/test_data/random503.nex");
+        File output = new File(folder.getRoot(), "output.nex");
+        LassoOptions options = new LassoOptions();
+        options.setInput(input);
+        options.setOutput(output);
+        options.setCliqueFinder(CliqueFinderFactory.HEURISTIC);
+        Lasso lasso = new Lasso(options);
+        lasso.run();
+        //Check that the output file exists
+        assertTrue(output.exists());
+        List<String> outputLines = FileUtils.readLines(output, "UTF-8");
+        //Check file is not empty
+        assertTrue(!outputLines.isEmpty());
+        //Check strong lasso is as expected
+        String[] expectedLasso = {  "[B -> E, 6.0]",  "[B -> D, 2.0]", "[C -> D, 2.0]", "[A -> D, 4.0]", "[B -> C, 2.0]" };
+        String[] expectedNewicks = {
+                "TREE tree1 = (((B:1.0,C:1.0,D:1.0):1.0,A:2.0):1.0,E:3.0):0.0;",
+                "TREE tree1 = (((B:1.0,D:1.0,C:1.0):1.0,A:2.0):1.0,E:3.0):0.0;",
+                "TREE tree1 = (((D:1.0,B:1.0,C:1.0):1.0,A:2.0):1.0,E:3.0):0.0;",
+                "TREE tree1 = (((D:1.0,C:1.0,B:1.0):1.0,A:2.0):1.0,E:3.0):0.0;",
+                "TREE tree1 = (((C:1.0,B:1.0,D:1.0):1.0,A:2.0):1.0,E:3.0):0.0;",
+                "TREE tree1 = (((C:1.0,D:1.0,B:1.0):1.0,A:2.0):1.0,E:3.0):0.0;"
+        };
+        //Trim whitespace from outputlines
+        outputLines = outputLines.stream().peek(System.out::println).map(String::trim).collect(Collectors.toList());
         //Check strong lasso matches what is expected
         long matched = Stream.of(expectedLasso).filter(outputLines::contains).count();
         assertEquals(expectedLasso.length, matched);

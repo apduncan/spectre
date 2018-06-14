@@ -20,6 +20,12 @@ public enum CliqueFinderFactory {
         public CliqueFinder get(LassoOptions options) {
             return new HeuristicCliqueFinder(options);
         }
+    },
+    BRONKERBOSCH {
+        @Override
+        public CliqueFinder get(LassoOptions options) {
+            return new BKCliqueFinder(options);
+        }
     };
 
     public abstract CliqueFinder get(LassoOptions options);

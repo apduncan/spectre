@@ -66,24 +66,20 @@ public class HeuristicCliqueFinder extends CliqueFinder {
             //Iterate through all vertices and add first candidate which is adjacent to all clique members
             //Quit when no candidate found
             Identifier add = null;
-            do {
+            while(candidates.size() > 0) {
                 //Set add to null for this iteration
                 add = null;
-                Optional<Identifier> optAdd = candidates.parallelStream()
-                        .filter(vertex -> {
-                            Set<Identifier> n = this.getNeighbours(vertex);
-                            return n.containsAll(clique);
-                        })
-                        .findFirst();
-                if (optAdd.isPresent()) {
-                    add = optAdd.get();
+                //Select a random vertex from candidates
+                int randomIdx = new Random().nextInt(candidates.size());
+                add = Identifier.class.cast(candidates.toArray()[randomIdx]);
+                if (add != null) {
                     //add to clique, remove from candidates
                     clique.add(add);
                     candidates.remove(add);
                     //reduce candidates to only those which are adjacent to newly added vertex
                     candidates.retainAll(this.getNeighbours(add));
                 }
-            } while (add != null);
+            }
             //If larger than current largest clique, start list again with this
             //If equal, add to list
             //Else discard

@@ -140,9 +140,11 @@ public class Lasso extends RunnableTool {
             //Map cords to weights
             Map<Pair<Identifier, Identifier>, Double> distances = graph.getDistancesUsed().parallelStream().
                     collect(Collectors.toMap(pair -> pair, pair -> original.getDistance(pair.getLeft(), pair.getRight())));
-            results.add(new LassoResult(graph.getLargestCluster(), distances));
+            results.add(new LassoResult(graph.getAllClusters(), distances));
         }
-        //Return result with most taxa
-        return results.parallelStream().min(Comparator.comparingInt(a -> a.getTree().getNbTaxa())).get();
+        //Return result with a cluster which has the largest single tree (largest being contains most taxa)
+        return results.stream()
+                .max(Comparator.comparingInt(result -> result.sizeLargestTree()))
+                .get();
     }
 }
