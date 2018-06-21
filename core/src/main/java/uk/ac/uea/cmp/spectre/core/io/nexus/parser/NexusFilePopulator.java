@@ -2306,7 +2306,7 @@ public class NexusFilePopulator implements NexusFileListener {
                     taxa_name = StringUtils.stripQuotes(entry);
                 }
                 else {
-                    data.add(Double.parseDouble(entry));
+                    data.add(Double.parseDouble(entry.equals("?") ? "0.0" : entry));
                 }
                 id_idx++;
             }

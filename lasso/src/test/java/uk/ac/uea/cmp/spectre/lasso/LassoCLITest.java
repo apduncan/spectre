@@ -13,7 +13,8 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso;import org.apache.commons.io.FileUtils;
+package uk.ac.uea.cmp.spectre.lasso;
+import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -32,7 +33,7 @@ public class LassoCLITest {
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
-    @Test
+    //@Test
     public void testTree1() throws IOException {
 
         File outputDir = temporaryFolder.getRoot();
@@ -55,14 +56,30 @@ public class LassoCLITest {
         File outputDir = temporaryFolder.getRoot();
         File outputFile = new File(outputDir.getAbsolutePath() + "output.nex");
 
-        File testFile1 = FileUtils.toFile(LassoCLITest.class.getResource("/random100.nex"));
+        File testFile1 = FileUtils.toFile(LassoCLITest.class.getResource("/example-mod.nex"));
 
         LassoCLI.main(new String[]{
                 "-o", outputFile.getAbsolutePath(),
-                "-r", "5",
-                "-a", "15",
+                "-r", "1",
                 "-du", "MODAL",
                 "-cf", "HEURISTIC",
+                testFile1.getAbsolutePath()
+        });
+
+        assertTrue(outputFile.exists());
+        assertTrue(FileUtils.readLines(outputFile, "UTF-8").size() > 0);
+    }
+
+    //@Test
+    public void testTree5() throws IOException {
+        //uk.ac.uea.cmp.spectre.lasso.Test with more complex options
+        File outputDir = temporaryFolder.getRoot();
+        File outputFile = new File(outputDir.getAbsolutePath() + "output.nex");
+
+        File testFile1 = FileUtils.toFile(LassoCLITest.class.getResource("/paradoxus-part-question.nex"));
+
+        LassoCLI.main(new String[]{
+                "-o", outputFile.getAbsolutePath(),
                 testFile1.getAbsolutePath()
         });
 

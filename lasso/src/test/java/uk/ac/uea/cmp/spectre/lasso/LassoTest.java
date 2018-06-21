@@ -35,7 +35,7 @@ public class LassoTest {
     @Before
     public void setup() {
         BasicConfigurator.configure();
-       LogManager.getRootLogger().setLevel(Level.INFO);
+        LogManager.getRootLogger().setLevel(Level.INFO);
     }
 
     @Rule

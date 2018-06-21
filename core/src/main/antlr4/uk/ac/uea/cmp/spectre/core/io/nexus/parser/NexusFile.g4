@@ -14,7 +14,7 @@ options
 DIGIT : [0-9];     // match single digit
 CHAR : [a-zA-Z];
 SQUOTE : '\'';
-DQUOTE : '\"';
+DQUOTE : '"';
 EQUALS : '=';
 
 FLOAT : ('-')? DIGIT* '.' DIGIT+ ('E' ('-')? DIGIT+)?;
@@ -240,7 +240,7 @@ labels_option :
     | 'left' | 'LEFT' | 'Left'
     | 'right' | 'RIGHT' | 'Right';
 
-mdata : (identifier|number)* ;
+mdata : (identifier|number|missing_option)* ;
 
 
 // ----------------------------------------------------------------------
