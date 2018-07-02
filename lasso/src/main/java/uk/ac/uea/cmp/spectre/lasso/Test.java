@@ -13,9 +13,12 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso;import org.apache.log4j.BasicConfigurator;
+package uk.ac.uea.cmp.spectre.lasso;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
+import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.RandomDistanceGenerator;
@@ -24,9 +27,58 @@ import uk.ac.uea.cmp.spectre.core.io.nexus.NexusWriter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.*;
 
 public class Test {
+    public static void cliqueAccuracyTest() {
+        final int missingFrom = 0;
+        final int missingTo = 50;
+        final int sizeFrom = 20;
+        final int sizeTo = 500;
+        final int missingStep = 10;
+        final int sizeStep = 20;
+        final int repeat = 100;
+        final RandomDistanceGenerator generator = new RandomDistanceGenerator();
+        CliqueFinder heuristic = CliqueFinderFactory.HEURISTIC.get(new LassoOptions());
+        CliqueFinder exhaustive = CliqueFinderFactory.BRONKERBOSCH.get(new LassoOptions());
+
+        //Loop through missing percentages
+        for(int missing = missingFrom; missing <= missingTo; missing += missingStep) {
+            for(int size = sizeFrom; size <= sizeTo; size += sizeStep) {
+                for(int rep = 0; rep < repeat; rep++) {
+                    //Generate random distance matrix
+                    LassoDistanceGraph graph = new LassoDistanceGraph(generator.generateDistances(size));
+                    //Delete distances
+                    deleteEdges(missing, graph);
+                    //Find max clique using exhaustive
+                    Set<Identifier> exhaustiveClique = exhaustive.find(graph);
+                    //Find max clique using heuristic
+                    Set<Identifier> heuristicClique = heuristic.find(graph);
+                    boolean match = exhaustiveClique.size() == heuristicClique.size();
+                    int cliqueSize = exhaustiveClique.size();
+                    //Output
+                    System.out.println(String.join(",", new String[]{
+                            String.valueOf(missing),
+                            String.valueOf(size),
+                            String.valueOf(match),
+                            String.valueOf(cliqueSize)
+                    }));
+                }
+            }
+        }
+    }
+
+    public static void deleteEdges(int pcDelete, LassoDistanceGraph graph) {
+        int numToDelete = graph.getMap().size() * (pcDelete / 100);
+        List<Pair<Identifier, Identifier>> keySet = new ArrayList<>(graph.getMap().keySet());
+        Collections.shuffle(keySet);
+        //Select first numToDelete and delete
+        for(int i = 0; i < numToDelete; i++) {
+            graph.removeDistance(keySet.get(i));
+        }
+    }
     public static void main(String[] args) {
+        cliqueAccuracyTest();
 /*        System.out.println("Long testing string here");
         String assign = "Separate string";
         DistanceMatrix fd = new RandomDistanceGenerator().generateDistances(100);
@@ -65,28 +117,28 @@ public class Test {
         System.out.println(simpleGraph.getLargestCluster());*/
 
         //write a random file to use
-        DistanceMatrix fd = new RandomDistanceGenerator().generateDistances(100);
-        double[][] reducedMatrix = new double[][] { {0, 4}, {4, 0} };
-        double[][] matrix = new double[][] { {0, 2, 2, 0, 0, 0}, {2, 0, 2, 0, 0, 0}, {2, 2, 0, 6, 0, 0}, {0, 0, 6, 0, 4, 4}, {0, 0, 0, 0, 4, 0, 4}, {0, 0, 0, 4, 4, 0} };
-        double[][] modalProb = new double[][] { {0, 2, 2, 0 }, {2, 0, 2, 0}, {2, 2, 0, 2}, {0, 0, 2, 0} };
-        LassoDistanceGraph lg = new LassoDistanceGraph(new FlexibleDistanceMatrix(modalProb));
-//        lg.setDistance("D", "E", 4);
-        Nexus nexus = new Nexus();
-        nexus.setTaxa(lg.getTaxa());
-        nexus.setDistanceMatrix(lg);
-        try {
-            new NexusWriter().writeDistanceMatrix(new File("/home/hal/Dropbox/Dissertation/spectre/spectre/lasso/src/test/resources/random100.nex"), fd);
-        } catch (IOException err) {
-            System.out.println("failed");
-        }
-
-        BasicConfigurator.configure();
-        LogManager.getRootLogger().setLevel(Level.INFO);
-        LassoOptions options = new LassoOptions();
-        options.setLassoRuns(2);
-        options.setInput(new File("/home/hal/Dropbox/Dissertation/random503.nex"));
-        options.setOutput(new File("/home/hal//Dropbox/Dissertation/outputtest.nex"));
-        Lasso lasso = new Lasso(options);
+//        DistanceMatrix fd = new RandomDistanceGenerator().generateDistances(100);
+//        double[][] reducedMatrix = new double[][] { {0, 4}, {4, 0} };
+//        double[][] matrix = new double[][] { {0, 2, 2, 0, 0, 0}, {2, 0, 2, 0, 0, 0}, {2, 2, 0, 6, 0, 0}, {0, 0, 6, 0, 4, 4}, {0, 0, 0, 0, 4, 0, 4}, {0, 0, 0, 4, 4, 0} };
+//        double[][] modalProb = new double[][] { {0, 2, 2, 0 }, {2, 0, 2, 0}, {2, 2, 0, 2}, {0, 0, 2, 0} };
+//        LassoDistanceGraph lg = new LassoDistanceGraph(new FlexibleDistanceMatrix(modalProb));
+////        lg.setDistance("D", "E", 4);
+//        Nexus nexus = new Nexus();
+//        nexus.setTaxa(lg.getTaxa());
+//        nexus.setDistanceMatrix(lg);
+//        try {
+//            new NexusWriter().writeDistanceMatrix(new File("/home/hal/Dropbox/Dissertation/spectre/spectre/lasso/src/test/resources/random100.nex"), fd);
+//        } catch (IOException err) {
+//            System.out.println("failed");
+//        }
+//
+//        BasicConfigurator.configure();
+//        LogManager.getRootLogger().setLevel(Level.INFO);
+//        LassoOptions options = new LassoOptions();
+//        options.setLassoRuns(2);
+//        options.setInput(new File("/home/hal/Dropbox/Dissertation/random503.nex"));
+//        options.setOutput(new File("/home/hal//Dropbox/Dissertation/outputtest.nex"));
+//        Lasso lasso = new Lasso(options);
 //        lasso.run();
 
         //Generate nexus file for graph from paper, adapted to have only one solution

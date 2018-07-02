@@ -115,8 +115,7 @@ public class LassoTest {
     @Test
     public void run3() throws IOException {
         //As test 1, but with BronKerbosch clique finder
-        //File input = FileUtils.toFile(LassoTest.class.getResource("/random503.nex"));
-        File input = new File("/home/hal/Dropbox/Dissertation/test_data/random503.nex");
+        File input = FileUtils.toFile(LassoTest.class.getResource("/example-mod.nex"));
         File output = new File(folder.getRoot(), "output.nex");
         LassoOptions options = new LassoOptions();
         options.setInput(input);
