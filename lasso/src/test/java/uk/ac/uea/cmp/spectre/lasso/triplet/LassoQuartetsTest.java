@@ -15,10 +15,17 @@
 
 package uk.ac.uea.cmp.spectre.lasso.triplet;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
+import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
+import uk.ac.uea.cmp.spectre.core.ds.distance.RandomDistanceGenerator;
 import uk.ac.uea.cmp.spectre.core.ds.quad.quartet.QuartetSystem;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -51,6 +58,21 @@ public class LassoQuartetsTest {
         double[][] pentMatrix = { {0, 3, 8, 0, 0}, {3, 0, 9, 16, 0}, {8, 9, 0, 15, 16}, {0, 16, 15, 0, 13}, {0, 0, 16, 13, 0} };
         DistanceMatrix pentDm = new FlexibleDistanceMatrix(pentMatrix);
         LassoQuartets lq = new LassoQuartets(pentDm);
+        lq.enrichMatrix();
+        QuartetSystem quartets = lq.getQuartets();
+        System.out.println(quartets);
+    }
+
+    @Test
+    public void randomDeletions() {
+        DistanceMatrix dm = new RandomDistanceGenerator().generateDistances(300);
+        List<Pair<Identifier, Identifier>> pairs = new ArrayList<>(dm.getMap().keySet());
+        Collections.shuffle(pairs);
+        //delete 100
+        for(int i = 0; i < 100; i++) {
+            pairs.remove(0);
+        }
+        LassoQuartets lq = new LassoQuartets(dm);
         lq.enrichMatrix();
         QuartetSystem quartets = lq.getQuartets();
         System.out.println(quartets);
