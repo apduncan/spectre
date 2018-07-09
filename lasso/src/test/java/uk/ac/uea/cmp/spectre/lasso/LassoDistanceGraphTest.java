@@ -218,4 +218,17 @@ public class LassoDistanceGraphTest {
         exception.expect(IllegalStateException.class);
         lg.getCluster(missing);
     }
+
+    @Test
+    public void getConnectedComponents() {
+        double[][] matrix = new double[][]{{0, 1, 0, 0, 0}, {1, 0, 0, 0, 0}, {0, 0, 0, 1, 1}, {0, 0, 1, 0, 0}, {0, 0, 1, 0, 0}};
+        LassoDistanceGraph lg = new LassoDistanceGraph(new FlexibleDistanceMatrix(matrix));
+        List<LassoDistanceGraph> components = lg.getConnectedComponents();
+        assertEquals(components.size(), 2);
+        assertEquals(1, components.get(0).getMap().size());
+        assertEquals(2, components.get(1).getMap().size());
+        assertEquals(components.get(1).getDistance("D", "E"), 0, 0.01);
+//        LassoDistanceGraph big = new LassoDistanceGraph(new RandomDistanceGenerator().generateDistances(300));
+//        components = big.getConnectedComponents();
+    }
 }

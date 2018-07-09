@@ -14,12 +14,15 @@
  */
 
 package uk.ac.uea.cmp.spectre.lasso;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
+import uk.ac.uea.cmp.spectre.core.ds.IdentifierList;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class LassoDistanceGraph extends FlexibleDistanceMatrix {
@@ -284,5 +287,126 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
 
     public List<LassoTree> getAllClusters() {
         return new ArrayList<>(this.identifierMap.values());
+    }
+
+    public void addIdentifierWithoutDistances(Identifier taxon) {
+        if(!this.getTaxa().contains(taxon)) {
+            this.getTaxa().add(taxon);
+        }
+    }
+
+    /**
+     * Find all connected components in the graph, and return each one in a list
+     * @return A list of the connected components in the original graph
+     */
+    public List<LassoDistanceGraph> getConnectedComponents() {
+        //This private class is passed to the depthFirstSearch implementation, and operates on each vertex found
+        class ComponentAccumulator implements Consumer<Identifier> {
+            private LassoDistanceGraph source;
+            private LassoDistanceGraph component;
+
+            public ComponentAccumulator(LassoDistanceGraph source) {
+                this.source = source;
+                //blank distance matrix
+                this.component = new LassoDistanceGraph(new FlexibleDistanceMatrix());
+            }
+
+            @Override
+            public void accept(Identifier identifier) {
+                //Add identifier
+                component.addIdentifier(identifier);
+                //Add all edges, and required identifiers
+                for(Identifier neighbour : source.getNeighbours(identifier)) {
+                    component.addIdentifierWithoutDistances(neighbour);
+                    component.setDistance(identifier, neighbour, source.getDistance(identifier, neighbour));
+                }
+            }
+
+            public LassoDistanceGraph getComponent() {
+                return component;
+            }
+        }
+
+        IdentifierList startCandidates = new IdentifierList(this.getTaxa());
+        List<LassoDistanceGraph> components = new ArrayList<>();
+        while (startCandidates.size() > 0) {
+            ComponentAccumulator component = new ComponentAccumulator(this);
+            List<Identifier> found = depthFirstSearch(startCandidates.get(0), new ArrayList<>(), component);
+            //Remove found vertices from start candidates
+            startCandidates.removeAll(found);
+            components.add(component.getComponent());
+        }
+        return components;
+    }
+
+    /**
+     * Search for all vertices reachable from vertex, and returns a list of all the discovered vertices
+     * @param vertex The vertex to visit
+     * @param visited All vertices which have been visited
+     * @param vertexVisit A consumer object which should be applied to each visited vertex. Optional.
+     * @return
+     */
+    public List<Identifier> depthFirstSearch(Identifier vertex, List<Identifier> visited, Consumer<Identifier> vertexVisit) {
+        visited.add(vertex);
+        for(Identifier neighbour : this.getNeighbours(vertex)) {
+            if(!visited.contains(neighbour)) {
+                depthFirstSearch(neighbour, visited, vertexVisit);
+                if(vertexVisit != null)
+                    vertexVisit.accept(vertex);
+            }
+        }
+        return visited;
+    }
+
+    /**
+     * Search for all vertices reachable from vertex, and returns a list of all the discovered vertices
+     * @param vertex The vertex to visit
+     * @return
+     */
+    public List<Identifier> depthFirstSearch(Identifier vertex) {
+        return depthFirstSearch(vertex, new ArrayList<Identifier>(), null);
+    }
+
+    /**
+     * Search for all vertices reachable from vertex, and returns a list of all the discovered vertices
+     * @param vertex The vertex to visit
+     * @param visit A consumer object which should be applied to each visited vertex
+     * @return
+     */
+    public List<Identifier> depthFirstSearch(Identifier vertex, Consumer<Identifier> visit) {
+        return depthFirstSearch(vertex, new ArrayList<Identifier>(), visit);
+    }
+
+    /**
+     * Search for all vertices reachable from vertex, and returns a list of all the discovered vertices
+     * @param vertex The vertex to visit
+     * @param vertexVisit A consumer object which should be applied to each visited vertex. Optional.
+     * @param edgeVisit A consumer object which should be applied to each edge traversed. Optional.
+     * @return
+     */
+    public List<Identifier> breadthFirstSearch(Identifier vertex, Consumer<Identifier> vertexVisit,
+                                               Consumer<Pair<Identifier, Identifier>> edgeVisit,
+                                               Set<Identifier> restrict) {
+        if(restrict == null) {
+            restrict = new HashSet<>(this.getTaxa());
+        }
+        Queue<Identifier> queue = new LinkedList<>();
+        List<Identifier> visited = new ArrayList<>();
+        queue.add(vertex);
+        visited.add(vertex);
+        while(queue.size() > 0) {
+            Identifier v = queue.poll();
+            if(vertexVisit != null)
+                vertexVisit.accept(v);
+            for(Identifier neighbour : this.getNeighbours(v)) {
+                if(!visited.contains(neighbour) && restrict.contains(neighbour)) {
+                    queue.add(neighbour);
+                    visited.add(neighbour);
+                    if(edgeVisit != null)
+                        edgeVisit.accept(new ImmutablePair<>(v, neighbour));
+                }
+            }
+        }
+        return visited;
     }
 }

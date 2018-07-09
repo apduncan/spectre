@@ -23,16 +23,23 @@ import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.quad.Quad;
 import uk.ac.uea.cmp.spectre.core.ds.quad.SpectreQuad;
 import uk.ac.uea.cmp.spectre.core.ds.quad.quartet.QuartetSystem;
+import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class LassoQuartets {
-    private DistanceMatrix matrix;
+    private LassoDistanceGraph matrix;
 
     public LassoQuartets(DistanceMatrix matrix) {
-        this.matrix = matrix;
+        this.matrix = new LassoDistanceGraph(matrix);
     }
 
     /**
@@ -64,6 +71,77 @@ public class LassoQuartets {
             //Do not count edges with weight 0 as an edge
         } while(matrix.getMap().values().stream().filter(distance -> distance > 0).count() > size);
 
+        return matrix;
+    }
+
+    //A method to determine if element of stream are unique by a certain property
+    public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor)
+    {
+        Map<Object, Boolean> map = new ConcurrentHashMap<>();
+        return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
+    }
+
+    public DistanceMatrix altEnrichMatrix() {
+        //An edge between one or more candidateVertices could form part of a new diamond
+        Set<Identifier> candidateVertices = new HashSet<>(matrix.getTaxa());
+        //Make distance matrix into graph to use neighbour finding method
+        long size = 0;
+        do {
+            size = matrix.getMap().values().stream().filter(distance -> distance > 0).count();
+            final Set<Identifier> currentCandidates = new HashSet<>(candidateVertices);
+            candidateVertices = new HashSet<>();
+            //Scan all edges which have weight > 0 and one or more vertices in candidates
+            //Make a list of pairs of edges which are known, and cords which make a diamond with that edge which are
+            //unknown
+            List<Pair<Pair<Identifier, Identifier>, Pair<Identifier, Identifier>>> quads = matrix.getMap().entrySet().stream()
+                    .filter(entry -> entry.getValue() > 0)
+                    .map(e -> e.getKey())
+                    .filter(edge -> currentCandidates.contains(edge.getLeft()) || currentCandidates.contains(edge.getRight()))
+                    .map((edge) -> {
+                        //Get all vertices which neighbour both ends of edge, each pair of these will make a diamond
+                        //Ignore any where distance between them is known
+                        Set<Identifier> neighbours = matrix.getNeighbours(edge.getRight());
+                        neighbours.retainAll(matrix.getNeighbours(edge.getLeft()));
+                        //If at least 2, make all distinct pairs
+                        if(neighbours.size() > 1) {
+                            IdentifierList neighbourList = new IdentifierList();
+                            neighbours.forEach(identifier -> neighbourList.add(identifier));
+                            Set<Pair<Identifier, Identifier>> pairs = allPairs(neighbourList);
+                            return pairs.stream()
+                                    .filter(pair -> matrix.getDistance(pair.getLeft(), pair.getRight()) <= 0)
+                                    .map(pair -> new ImmutablePair(edge, pair))
+                                    .collect(Collectors.toList());
+
+                        } else {
+                            return null;
+                        }
+                    })
+            .filter(list -> list != null)
+            .flatMap(list -> list.stream())
+            //Remove diamonds which have duplicate missing distance, only want to infer once
+            .filter(distinctByKey(pair -> pair.getRight()))
+            .map(item -> (Pair<Pair<Identifier, Identifier>, Pair<Identifier, Identifier>>)item)
+            .collect(Collectors.toList());
+
+            //Iterate over quads and attempt to infer distances
+                 for(Pair<Pair<Identifier, Identifier>, Pair<Identifier, Identifier>> quad : quads) {
+                //Build all cords
+                IdentifierList all = new IdentifierList();
+                all.add(quad.getRight().getRight());
+                all.add(quad.getRight().getLeft());
+                all.add(quad.getLeft().getRight());
+                all.add(quad.getLeft().getLeft());
+                Set<Pair<Identifier, Identifier>> pairs = allPairs(all);
+                pairs.remove(quad.getRight());
+                //Pair could be in inverted order, also attempt to remove this
+                pairs.remove(new ImmutablePair<>(quad.getRight().getRight(), quad.getRight().getLeft()));
+                if(inferDistance(pairs, quad.getRight(), all)) {
+                    //Add vertices at either end of missing distance to candidates for next iteration
+                    candidateVertices.add(quad.getRight().getLeft());
+                    candidateVertices.add(quad.getRight().getLeft());
+                }
+            }
+        } while (matrix.getMap().values().stream().filter(distance -> distance > 0).count() > size);
         return matrix;
     }
 

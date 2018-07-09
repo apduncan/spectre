@@ -36,7 +36,7 @@ public class LassoQuartetsTest {
         double[][] matrix = { {0, 3, 8, 0}, {3, 0, 9, 10}, {8, 9, 0, 9}, {0, 10, 9, 0} };
         DistanceMatrix dm = new FlexibleDistanceMatrix(matrix);
         LassoQuartets lq = new LassoQuartets(dm);
-        dm = lq.enrichMatrix();
+        dm = lq.altEnrichMatrix();
         //distance between a and d should be set to 9
         assertEquals(dm.getDistance("A", "D"), 9, 0.01);
 
@@ -45,7 +45,7 @@ public class LassoQuartetsTest {
         double[][] pentMatrix = { {0, 3, 8, 0, 0}, {3, 0, 9, 16, 0}, {8, 9, 0, 15, 16}, {0, 16, 15, 0, 13}, {0, 0, 16, 13, 0} };
         DistanceMatrix pentDm = new FlexibleDistanceMatrix(pentMatrix);
         lq = new LassoQuartets(pentDm);
-        pentDm = lq.enrichMatrix();
+        pentDm = lq.altEnrichMatrix();
         assertEquals(pentDm.getDistance("A", "D"), 15,0.01);
         assertEquals(pentDm.getDistance("A", "E"), 16, 0.01);
         assertEquals(pentDm.getDistance("B", "E"), 17, 0.01);
@@ -65,15 +65,16 @@ public class LassoQuartetsTest {
 
     @Test
     public void randomDeletions() {
-        DistanceMatrix dm = new RandomDistanceGenerator().generateDistances(300);
+        DistanceMatrix dm = new RandomDistanceGenerator().generateDistances(100);
         List<Pair<Identifier, Identifier>> pairs = new ArrayList<>(dm.getMap().keySet());
         Collections.shuffle(pairs);
-        //delete 100
-        for(int i = 0; i < 100; i++) {
-            pairs.remove(0);
+        //delete 20
+        for(int i = 0; i < 20; i++) {
+            dm.setDistance(pairs.get(i).getLeft(), pairs.get(i).getRight(), 0);
         }
         LassoQuartets lq = new LassoQuartets(dm);
-        lq.enrichMatrix();
+        lq.altEnrichMatrix();
+        System.out.println("Finished enriching");
         QuartetSystem quartets = lq.getQuartets();
         System.out.println(quartets);
     }
