@@ -20,15 +20,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.IdentifierList;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
+import uk.ac.uea.cmp.spectre.core.ds.distance.RandomDistanceGenerator;
 import uk.ac.uea.cmp.spectre.core.ds.quad.Quad;
 import uk.ac.uea.cmp.spectre.core.ds.quad.SpectreQuad;
 import uk.ac.uea.cmp.spectre.core.ds.quad.quartet.QuartetSystem;
 import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -37,6 +35,7 @@ import java.util.stream.Stream;
 
 public class LassoQuartets {
     private LassoDistanceGraph matrix;
+    private final static int[][] PAIRS_OF_QUAD = {{0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3}};
 
     public LassoQuartets(DistanceMatrix matrix) {
         this.matrix = new LassoDistanceGraph(matrix);
@@ -84,65 +83,94 @@ public class LassoQuartets {
     public DistanceMatrix altEnrichMatrix() {
         //An edge between one or more candidateVertices could form part of a new diamond
         Set<Identifier> candidateVertices = new HashSet<>(matrix.getTaxa());
-        //Make distance matrix into graph to use neighbour finding method
         long size = 0;
+        Map<Identifier, Set<Identifier>> neighbourCache = new HashMap<>();
+        Set<Pair<Identifier, Identifier>> distancesInferred = new HashSet<>();
         do {
             size = matrix.getMap().values().stream().filter(distance -> distance > 0).count();
             final Set<Identifier> currentCandidates = new HashSet<>(candidateVertices);
-            candidateVertices = new HashSet<>();
+            //empty out candidate vertices
+            candidateVertices.removeIf((item) -> true);
             //Scan all edges which have weight > 0 and one or more vertices in candidates
             //Make a list of pairs of edges which are known, and cords which make a diamond with that edge which are
             //unknown
             List<Pair<Pair<Identifier, Identifier>, Pair<Identifier, Identifier>>> quads = matrix.getMap().entrySet().stream()
-                    .filter(entry -> entry.getValue() > 0)
-                    .map(e -> e.getKey())
-                    .filter(edge -> currentCandidates.contains(edge.getLeft()) || currentCandidates.contains(edge.getRight()))
-                    .map((edge) -> {
-                        //Get all vertices which neighbour both ends of edge, each pair of these will make a diamond
-                        //Ignore any where distance between them is known
-                        Set<Identifier> neighbours = matrix.getNeighbours(edge.getRight());
-                        neighbours.retainAll(matrix.getNeighbours(edge.getLeft()));
-                        //If at least 2, make all distinct pairs
-                        if(neighbours.size() > 1) {
-                            IdentifierList neighbourList = new IdentifierList();
-                            neighbours.forEach(identifier -> neighbourList.add(identifier));
-                            Set<Pair<Identifier, Identifier>> pairs = allPairs(neighbourList);
-                            return pairs.stream()
-                                    .filter(pair -> matrix.getDistance(pair.getLeft(), pair.getRight()) <= 0)
-                                    .map(pair -> new ImmutablePair(edge, pair))
-                                    .collect(Collectors.toList());
+                .filter(entry -> entry.getValue() > 0)
+                .map(e -> e.getKey())
+                .filter(edge -> currentCandidates.contains(edge.getLeft()) || currentCandidates.contains(edge.getRight()))
+                .map((edge) -> {
+                    //Get all vertices which neighbour both ends of edge, each pair of these will make a diamond
+                    //Ignore any where distance between them is known
+                    Set<Identifier> neighbours = getNeighoursCache(edge.getRight(), matrix, neighbourCache);
+                    neighbours.retainAll(getNeighoursCache(edge.getLeft(), matrix, neighbourCache));
+                    //If at least 2, make all distinct pairs
+                    if(neighbours.size() > 1) {
+                        IdentifierList neighbourList = new IdentifierList();
+                        neighbours.forEach(identifier -> neighbourList.add(identifier));
+                        Set<Pair<Identifier, Identifier>> pairs = allPairs(neighbourList);
+                        return pairs.stream()
+                                .filter(pair -> matrix.getDistance(pair.getLeft(), pair.getRight()) <= 0)
+                                .map(pair -> new ImmutablePair(edge, pair))
+                                .collect(Collectors.toList());
 
-                        } else {
-                            return null;
-                        }
-                    })
-            .filter(list -> list != null)
-            .flatMap(list -> list.stream())
-            //Remove diamonds which have duplicate missing distance, only want to infer once
-            .filter(distinctByKey(pair -> pair.getRight()))
-            .map(item -> (Pair<Pair<Identifier, Identifier>, Pair<Identifier, Identifier>>)item)
-            .collect(Collectors.toList());
+                    } else {
+                        return null;
+                    }
+                })
+                .filter(list -> list != null)
+                .flatMap(list -> list.stream())
+                //Remove diamonds which have duplicate missing distance, only want to infer once
+                //.filter(distinctByKey(pair -> pair.getRight()))
+                .map(item -> (Pair<Pair<Identifier, Identifier>, Pair<Identifier, Identifier>>)item)
+                .collect(Collectors.toList());
 
-            //Iterate over quads and attempt to infer distances
-                 for(Pair<Pair<Identifier, Identifier>, Pair<Identifier, Identifier>> quad : quads) {
-                //Build all cords
-                IdentifierList all = new IdentifierList();
-                all.add(quad.getRight().getRight());
-                all.add(quad.getRight().getLeft());
-                all.add(quad.getLeft().getRight());
-                all.add(quad.getLeft().getLeft());
-                Set<Pair<Identifier, Identifier>> pairs = allPairs(all);
-                pairs.remove(quad.getRight());
-                //Pair could be in inverted order, also attempt to remove this
-                pairs.remove(new ImmutablePair<>(quad.getRight().getRight(), quad.getRight().getLeft()));
-                if(inferDistance(pairs, quad.getRight(), all)) {
-                    //Add vertices at either end of missing distance to candidates for next iteration
-                    candidateVertices.add(quad.getRight().getLeft());
-                    candidateVertices.add(quad.getRight().getLeft());
+            quads.forEach(quad -> {
+                //for(Pair<Pair<Identifier, Identifier>, Pair<Identifier, Identifier>> quad : quads) {
+                //If this distance has already been inferred, skip
+                if(!distancesInferred.contains(quad.getRight())) {
+                    //Build all cords
+                    IdentifierList all = new IdentifierList();
+                    all.add(quad.getRight().getRight());
+                    all.add(quad.getRight().getLeft());
+                    all.add(quad.getLeft().getRight());
+                    all.add(quad.getLeft().getLeft());
+                    Set<Pair<Identifier, Identifier>> pairs = allPairs(all);
+                    pairs.remove(quad.getRight());
+                    //Pair could be in inverted order, also attempt to remove this
+                    pairs.remove(new ImmutablePair<>(quad.getRight().getRight(), quad.getRight().getLeft()));
+                    if (inferDistance(pairs, quad.getRight(), all)) {
+                        //Add vertices at either end of missing distance to candidates for next iteration
+                        candidateVertices.add(quad.getRight().getLeft());
+                        candidateVertices.add(quad.getRight().getRight());
+                        //Make these two vertices neighbours in our cached map of neighbours
+                        addNeighboursCache(quad.getRight().getLeft(), quad.getRight().getRight(), neighbourCache, matrix);
+                        //Mark this distance as inferred
+                        distancesInferred.add(quad.getRight());
+                    }
                 }
-            }
+            });
         } while (matrix.getMap().values().stream().filter(distance -> distance > 0).count() > size);
         return matrix;
+    }
+
+    private Set<Identifier> getNeighoursCache(Identifier vertex, LassoDistanceGraph graph,
+          Map<Identifier, Set<Identifier>> cache) {
+        if(!cache.containsKey(vertex)) {
+            Set<Identifier> neighbours = graph.getNeighbours(vertex);
+            cache.put(vertex, neighbours);
+            return neighbours;
+        }
+        return cache.get(vertex);
+    }
+
+    private void addNeighboursCache(Identifier id1, Identifier id2, Map<Identifier, Set<Identifier>> cache, LassoDistanceGraph graph) {
+        //Make id1 neighbour id2 and vice versa
+        Set<Identifier> id1Neighbours = getNeighoursCache(id1, graph, cache);
+        id1Neighbours.add(id2);
+        Set<Identifier> id2Neighbours = getNeighoursCache(id2, graph, cache);
+        id2Neighbours.add(id1);
+        cache.put(id1, id1Neighbours);
+        cache.put(id2, id2Neighbours);
     }
 
     /**
@@ -188,10 +216,9 @@ public class LassoQuartets {
         QuartetSystem quartets = new QuartetSystem();
         quartets.setTaxa(matrix.getTaxa());
         IdentifierCombinations combinations = new IdentifierCombinations(matrix.getTaxa(), 4);
-        for(IdentifierList quad : combinations) {
+        for(IdentifierList quad: combinations) {
             Quad quartet = getQuartet(quad);
             if(quartet != null) {
-                //Add the found quartet to system. Give all weight 0 as not assigning weights.
                 quartets.getQuartets().put(quartet, Double.valueOf(0));
             }
         }
@@ -204,9 +231,14 @@ public class LassoQuartets {
      */
     private Quad getQuartet(IdentifierList quad) {
         //Check all distances are in matrix
-        Set<Pair<Identifier, Identifier>> pairs = allPairs(quad);
-        if(!distancesInMatrix(pairs))
-            return null;
+//        Set<Pair<Identifier, Identifier>> pairs = allPairs(quad);
+//        if(!distancesInMatrix(pairs))
+//            return null;
+        for(int[] pair : LassoQuartets.PAIRS_OF_QUAD) {
+            if(matrix.getDistance(quad.get(pair[0]), quad.get(pair[1])) <= 0) {
+                return null;
+            }
+        }
         //Get four point condition distances
         double bcad = matrix.getDistance(quad.get(1), quad.get(2)) + matrix.getDistance(quad.get(0), quad.get(3));
         double abcd = matrix.getDistance(quad.get(0), quad.get(1)) + matrix.getDistance(quad.get(2), quad.get(3));
@@ -257,4 +289,5 @@ public class LassoQuartets {
         single.add(pair);
         return distancesInMatrix(single);
     }
+
 }

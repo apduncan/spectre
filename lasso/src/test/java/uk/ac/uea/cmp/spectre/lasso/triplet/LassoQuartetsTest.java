@@ -15,6 +15,7 @@
 
 package uk.ac.uea.cmp.spectre.lasso.triplet;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
@@ -49,6 +50,36 @@ public class LassoQuartetsTest {
         assertEquals(pentDm.getDistance("A", "D"), 15,0.01);
         assertEquals(pentDm.getDistance("A", "E"), 16, 0.01);
         assertEquals(pentDm.getDistance("B", "E"), 17, 0.01);
+    }
+
+    @Test
+    public void timeComparison() {
+        DistanceMatrix dm = new RandomDistanceGenerator().generateDistances(200);
+        List<Pair<Identifier, Identifier>> pairs = new ArrayList<>(dm.getMap().keySet());
+        Collections.shuffle(pairs);
+        //delete 20
+        System.out.println("Deleting edges");
+        for(int i = 0; i < 10000; i++) {
+            dm.setDistance(pairs.get(i).getLeft(), pairs.get(i).getRight(), 0);
+        }
+        LassoQuartets lq = new LassoQuartets(dm);
+        StopWatch timer = new StopWatch();
+//        System.out.println("Begin standard enriching");
+//        timer.start();
+//        lq.enrichMatrix();
+//        System.out.println("Finished enriching standard");
+//        timer.stop();
+//        System.out.println("Time: " + timer.getTime());
+//        timer.reset();
+        lq = new LassoQuartets(dm);
+        timer.start();
+        lq.altEnrichMatrix();
+        timer.stop();
+        System.out.println("Finished enriching alternate");
+        System.out.println("Time: " + timer.getTime());
+
+        QuartetSystem quartets = lq.getQuartets();
+        System.out.println(quartets);
     }
 
     @Test
