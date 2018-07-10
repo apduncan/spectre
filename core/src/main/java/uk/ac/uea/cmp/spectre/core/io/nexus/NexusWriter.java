@@ -26,8 +26,10 @@ import uk.ac.uea.cmp.spectre.core.ds.network.Network;
 import uk.ac.uea.cmp.spectre.core.ds.network.NetworkLabel;
 import uk.ac.uea.cmp.spectre.core.ds.network.Vertex;
 import uk.ac.uea.cmp.spectre.core.ds.network.draw.ViewerConfig;
+import uk.ac.uea.cmp.spectre.core.ds.quad.Quad;
 import uk.ac.uea.cmp.spectre.core.ds.quad.quadruple.Quadruple;
 import uk.ac.uea.cmp.spectre.core.ds.quad.quadruple.QuadrupleSystem;
+import uk.ac.uea.cmp.spectre.core.ds.quad.quartet.QuartetSystem;
 import uk.ac.uea.cmp.spectre.core.ds.split.Split;
 import uk.ac.uea.cmp.spectre.core.ds.split.SplitSystem;
 import uk.ac.uea.cmp.spectre.core.ds.split.flat.Utilities;
@@ -38,10 +40,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 /**
  * Used to handle streaming data to Nexus format file from SplitSystem objects and other splits and length data. Can
@@ -515,6 +515,32 @@ public class NexusWriter extends AbstractSpectreWriter implements Appendable {
         }
         this.appendLine(" ;\nEND [Viewer];");
 
+        return this;
+    }
+
+    public NexusWriter append(QuartetSystem quartets, boolean weighted) {
+        this.appendLine("BEGIN Quartets;");
+        this.appendLine("  DIMENSIONS NTAX=" + quartets.getTaxa().size() + " NQUARTETS=" + quartets.getQuartets().size() + ";");
+        this.appendLine("  FORMAT");
+        this.appendLine("    LABELS=NO");
+        this.appendLine("    WEIGHTS=" + (weighted ? "YES" : "NO"));
+        this.appendLine("  ;");
+        this.appendLine("  MATRIX");
+        //Iterate over existing quartets
+        for(Map.Entry<Quad, Double> entry : quartets.getQuartets().entrySet()) {
+            Double weight = entry.getValue();
+            String quartet =  "";
+            int i = 0;
+            for(int idx : entry.getKey().toIntArray()) {
+                quartet = quartet + idx + " ";
+                quartet = quartet + (i == 1 ? ": ": "");
+                i++;
+            }
+            quartet = quartet.trim() + ",";
+            this.appendLine("  " + quartet);
+        }
+        this.appendLine("  ;");
+        this.appendLine("END; [Quartets]");
         return this;
     }
 

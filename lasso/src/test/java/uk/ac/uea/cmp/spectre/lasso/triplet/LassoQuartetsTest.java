@@ -15,6 +15,7 @@
 
 package uk.ac.uea.cmp.spectre.lasso.triplet;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
@@ -23,10 +24,19 @@ import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.RandomDistanceGenerator;
 import uk.ac.uea.cmp.spectre.core.ds.quad.quartet.QuartetSystem;
+import uk.ac.uea.cmp.spectre.core.io.nexus.Nexus;
+import uk.ac.uea.cmp.spectre.core.io.nexus.NexusReader;
+import uk.ac.uea.cmp.spectre.core.io.nexus.NexusWriter;
+import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
+import uk.ac.uea.cmp.spectre.lasso.LassoTest;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -54,12 +64,12 @@ public class LassoQuartetsTest {
 
     @Test
     public void timeComparison() {
-        DistanceMatrix dm = new RandomDistanceGenerator().generateDistances(200);
+        DistanceMatrix dm = new RandomDistanceGenerator().generateDistances(30);
         List<Pair<Identifier, Identifier>> pairs = new ArrayList<>(dm.getMap().keySet());
         Collections.shuffle(pairs);
         //delete 20
         System.out.println("Deleting edges");
-        for(int i = 0; i < 10000; i++) {
+        for(int i = 0; i < 90; i++) {
             dm.setDistance(pairs.get(i).getLeft(), pairs.get(i).getRight(), 0);
         }
         LassoQuartets lq = new LassoQuartets(dm);
@@ -80,6 +90,66 @@ public class LassoQuartetsTest {
 
         QuartetSystem quartets = lq.getQuartets();
         System.out.println(quartets);
+        NexusWriter writer = new NexusWriter();
+        writer.appendHeader();
+        writer.appendLine();
+        writer.append(quartets.getTaxa());
+        writer.appendLine();
+        writer.append(quartets, false);
+        try {
+            writer.write(new File("/home/hal/test-quartet.nex"));
+        } catch (IOException e) {
+            System.out.println("Write err: "  + e.toString());
+        }
+    }
+
+    @Test
+    public void yeastTest() {
+        File input = FileUtils.toFile(LassoTest.class.getResource("/paradoxus-part-question.nex"));
+        File output = new File("/home/hal/quartet-yeast.nex");
+        try {
+            Nexus nexus = new NexusReader().parse(input);
+            LassoDistanceGraph lg = new LassoDistanceGraph(new FlexibleDistanceMatrix(nexus.getDistanceMatrix()));
+            LassoDistanceGraph original = new LassoDistanceGraph(lg);
+            LassoQuartets lq = new LassoQuartets(lg);
+            FlexibleDistanceMatrix dm = new FlexibleDistanceMatrix(lq.altEnrichMatrix());
+            QuartetSystem quartets = lq.getQuartets();
+            //now original method
+            LassoDistanceGraph lg2 = new LassoDistanceGraph(original);
+            LassoQuartets lq2 = new LassoQuartets(lg2);
+            FlexibleDistanceMatrix dm2 = new FlexibleDistanceMatrix(lq2.enrichMatrix());
+            QuartetSystem quartets2 = lq2.getQuartets();
+            //output edges which are not equal, and whether they existed in the original matrix
+            Set<Pair<Identifier, Identifier>> edges = dm.getMap().entrySet().stream().filter(e -> e.getValue() > 0)
+                    .map(e -> e.getKey()).collect(Collectors.toSet());
+            edges.addAll(dm2.getMap().entrySet().stream().filter(e-> e.getValue() > 0).map(e -> e.getKey()).collect(Collectors.toSet()));
+            edges.stream().forEach(e -> {
+                boolean notPresent = false;
+                if(!(dm2.getMap().containsKey(e))) {
+                    System.out.println("Edge " + e.toString() + " weight " + dm.getMap().get(e) + " not in dm2");
+                    notPresent = true;
+                }
+                if(!(dm.getMap().containsKey(e))) {
+                    System.out.println("Edge " + e.toString() + " weight " + dm2.getMap().get(e) + " not in dm1");
+                    notPresent = true;
+                }
+                if(!notPresent) {
+                    //Check distance equal
+                    if(dm.getDistance(e.getLeft(), e.getRight()) != dm2.getDistance(e.getLeft(), e.getRight())) {
+                        System.out.println(e.toString() + " not equal length");
+                    }
+                }
+            });
+            NexusWriter writer = new NexusWriter();
+            writer.appendHeader();
+            writer.appendLine();
+            writer.append(quartets2.getTaxa());
+            writer.appendLine();
+            writer.append(quartets2, false);
+            writer.write(output);
+        } catch (IOException e) {
+            System.out.println("Error reading nexus file");
+        }
     }
 
     @Test
