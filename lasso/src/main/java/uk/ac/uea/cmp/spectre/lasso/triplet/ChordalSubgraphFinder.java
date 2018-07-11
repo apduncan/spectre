@@ -65,7 +65,8 @@ public class ChordalSubgraphFinder {
     }
 
     /**
-     * Check if edge can be added to the chordal subgraph, and the result graph will still be chordal
+     * Check if edge can be added to the chordal subgraph, and the result graph will still be chordal, and will be
+     * a strong lasso
      * @param edge Edge to add
      * @return True if can be added
      */
@@ -78,9 +79,46 @@ public class ChordalSubgraphFinder {
         Set<Identifier> vNeighbours = subgraph.getNeighbours(v);
         vNeighbours.remove(v);
         //Find if a path exists between the two ends of the edge, when subgraph is resritced to vNeighbours
-        return !pathExists(edge.getLeft(), edge.getRight(), subgraph, vNeighbours);
+        boolean path = pathExists(edge.getLeft(), edge.getRight(), subgraph, vNeighbours);
+        //If a path exists, this is not a valid edge to add
+        if(path)
+            return false;
+        //Locate any diamonds formed by adding edge ab to the subgraph. Only accept if all these diamonds
+        //fit the conditions which would allow the weight of the missing edge to be inferred (the missing edge is
+        //between a pair not in the same cherry)
+        List<Pair<Identifier, Identifier>> triangleEdges = new ArrayList<>();
+        triangleEdges.add(new ImmutablePair<>(v, edge.getLeft()));
+        triangleEdges.add(new ImmutablePair<>(v, edge.getRight()));
+        for(Pair<Identifier, Identifier> triedge : triangleEdges) {
+            //Check if a matching triangle exists on the other side of this edge.
+            //va will not return b as a neighbour, as edge ab does not exist in subgraph yet
+            Set<Identifier> neighbourIntersection = subgraph.getNeighbours(triedge.getLeft());
+            neighbourIntersection.retainAll(subgraph.getNeighbours(triedge.getRight()));
+            if(neighbourIntersection.size() > 0) {
+                //{vab} union neighbourIntersection (call this u) is diamond
+                //check that it meets the criteria for an acceptable diamond.
+                //uv is the missing distance. ab is distance being added
+                Identifier u = neighbourIntersection.stream().findFirst().get();
+                Double dxy = graph.getDistance(u, triedge.getRight());
+                Double duz = graph.getDistance(v, triedge.getLeft());
+                Double dxu = graph.getDistance(triedge.getLeft(), u);
+                Double dyz = graph.getDistance(triedge.getRight(), v);
+                if(dxy + duz >= dxu + dyz)
+                    return false;
+            }
+        }
+        //No reason to reject the addition of this edge have been found, so accept
+        return true;
     }
 
+    /**
+     * Find if a path exists between two vertices in a graph, or a subgraph induced by restricting to certain vertices.
+     * @param from Vertex to start searching from
+     * @param to Vertex to find a path to
+     * @param graph The graph to find the path in
+     * @param restrict Search in a subgraph induced by restricting graph to contain only vertices in restrict
+     * @return Boolean
+     */
     private boolean pathExists(Identifier from, Identifier to, LassoDistanceGraph graph, Set<Identifier> restrict) {
         if(restrict == null) {
             restrict = new HashSet<>(graph.getTaxa());

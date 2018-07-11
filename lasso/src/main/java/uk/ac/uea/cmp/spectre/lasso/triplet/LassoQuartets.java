@@ -35,16 +35,24 @@ import java.util.stream.Stream;
 
 public class LassoQuartets {
     private LassoDistanceGraph matrix;
+    //Subsets for 4c2. Used in place of combination class for speed.
     private final static int[][] PAIRS_OF_QUAD = {{0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3}};
 
     public LassoQuartets(DistanceMatrix matrix) {
         this.matrix = new LassoDistanceGraph(matrix);
     }
 
+    public DistanceMatrix getMatrix() {
+        return this.matrix;
+    }
+
     /**
-     * Search for diamonds representing quarter where 5 distances are known, and one missing. If possible, infer
-     * this missing distance, and add to the matrix. Repeat until no cords can be added.
-     * @return
+     * Add distances in the matrix by locating diamonds the graph of cords, where the missing distance is not between
+     * two taxa forming a cherry. Continue doing so until no new cords and weights can be inferred. If the matrix is
+     * not a strong lasso, there could be multiple weights which could be inferred for a cord - the first possible
+     * weight encountered will be used. An alternate method, altEnrichMatrix, is available, which is faster but with
+     * higher memory use.
+     * @return A matrix with as many cords and weights as possible inferred.
      */
     public DistanceMatrix enrichMatrix() {
         long size = 0;
@@ -73,13 +81,13 @@ public class LassoQuartets {
         return matrix;
     }
 
-    //A method to determine if element of stream are unique by a certain property
-    public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor)
-    {
-        Map<Object, Boolean> map = new ConcurrentHashMap<>();
-        return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
-    }
-
+    /**
+     * Add distances in the matrix by locating diamonds the graph of cords, where the missing distance is not between
+     * two taxa forming a cherry. Continue doing so until no new cords and weights can be inferred. If the matrix is
+     * not a strong lasso, there could be multiple weights which could be inferred for a cord - the first possible
+     * weight encountered will be used. A faster but more memory intensive method than enrichMatrix.
+     * @return A matrix with as many cords and weights as possible inferred.
+     */
     public DistanceMatrix altEnrichMatrix() {
         //An edge between one or more candidateVertices could form part of a new diamond
         Set<Identifier> candidateVertices = new HashSet<>(matrix.getTaxa());
@@ -119,8 +127,6 @@ public class LassoQuartets {
                 })
                 .filter(list -> list != null)
                 .flatMap(list -> list.stream())
-                //Remove diamonds which have duplicate missing distance, only want to infer once
-                //.filter(distinctByKey(pair -> pair.getRight()))
                 .map(item -> (Pair<Pair<Identifier, Identifier>, Pair<Identifier, Identifier>>)item)
                 .collect(Collectors.toList());
 
@@ -153,16 +159,30 @@ public class LassoQuartets {
         return matrix;
     }
 
+    /**
+     * Get the neighours of vertex in graph, using a cached result in cache if this had been looked up before
+     * @param vertex Vertex to find neighbours of
+     * @param graph The graph to find neighbours in
+     * @param cache A map which holds previously looked up sets of neighbours
+     * @return The neighbours of vertex in graph.
+     */
     private Set<Identifier> getNeighoursCache(Identifier vertex, LassoDistanceGraph graph,
           Map<Identifier, Set<Identifier>> cache) {
         if(!cache.containsKey(vertex)) {
             Set<Identifier> neighbours = graph.getNeighbours(vertex);
             cache.put(vertex, neighbours);
-            return neighbours;
+            return new HashSet(neighbours);
         }
-        return cache.get(vertex);
+        return new HashSet(cache.get(vertex));
     }
 
+    /**
+     * Update a cached set of neigbours, such that vertices id1 and id2 are adjacent.
+     * @param id1 Vertex to make adjacent to id2
+     * @param id2 Vertex to make adjacent to id1
+     * @param cache A map which holds previously looked up sets of neighbours
+     * @param graph The graph to find id1 and id2 in
+     */
     private void addNeighboursCache(Identifier id1, Identifier id2, Map<Identifier, Set<Identifier>> cache, LassoDistanceGraph graph) {
         //Make id1 neighbour id2 and vice versa
         Set<Identifier> id1Neighbours = getNeighoursCache(id1, graph, cache);
@@ -174,7 +194,7 @@ public class LassoQuartets {
     }
 
     /**
-     * Attempt to infer the length of missing cord in a quarter, and add this distance into the matrix
+     * Attempt to infer the length of missing cord in a quartet, and add this distance into the matrix
      * @param known The five cords known in the quarter
      * @param missing The missing cord
      * @param combination The set of identifiers which make up the taxa of this quartet
@@ -210,6 +230,11 @@ public class LassoQuartets {
     }
 
 
+    /**
+     * Find and return all valid quartets in the current matrix. A valid quartet is one meeting the four point
+     * condition.
+     * @return All valid quartets in the matrix
+     */
     public QuartetSystem getQuartets() {
         //Iterate over every combination of taxa
         //Attempt to find a valid quartet and which pairs are cherries
@@ -226,14 +251,11 @@ public class LassoQuartets {
     }
 
     /**
-     * Find a valid quarter from the four identifiers provided. If not valid quartet, will return null.
+     * Find a valid quartet from the four identifiers provided. If not a valid quartet, will return null.
      * @return A quartet if one exists, or null if no quartet
      */
     private Quad getQuartet(IdentifierList quad) {
         //Check all distances are in matrix
-//        Set<Pair<Identifier, Identifier>> pairs = allPairs(quad);
-//        if(!distancesInMatrix(pairs))
-//            return null;
         for(int[] pair : LassoQuartets.PAIRS_OF_QUAD) {
             if(matrix.getDistance(quad.get(pair[0]), quad.get(pair[1])) <= 0) {
                 return null;
@@ -256,7 +278,7 @@ public class LassoQuartets {
     /**
      * Make a set of all possible pairs of taxa in taxa
      * @param taxa Set of taxa to make pairs of
-     * @return A set contain all pairs of identifiers
+     * @return A set containing all pairs of identifiers
      */
     private Set<Pair<Identifier, Identifier>> allPairs(IdentifierList taxa) {
         //Make the possible set of pairwise distances for this quarter
@@ -270,9 +292,9 @@ public class LassoQuartets {
     }
 
     /**
-     * Determine if all the distances between pairs in distances exist in the matrix.
-     * A distance is determined to be missing if the distance is 0.
-     * @param distances A set of pairs of taxa to determine if there are distance between
+     * Determine if all of a set of edges exist in the current matrix.
+     * An edge is determined as missing if the distance between the two vertices is 0.
+     * @param distances A set of pairs of taxa to determine if there is a distance between
      * @return Boolean
      */
     private boolean distancesInMatrix(Set<Pair<Identifier, Identifier>> distances) {
@@ -284,6 +306,11 @@ public class LassoQuartets {
         return true;
     }
 
+    /**
+     * Find if an edge exists.
+     * @param pair Vertices to test if there is an edge between
+     * @return Boolean
+     */
     private boolean distancesInMatrix(Pair<Identifier, Identifier> pair) {
         Set<Pair<Identifier, Identifier>> single = new HashSet<Pair<Identifier, Identifier>>();
         single.add(pair);

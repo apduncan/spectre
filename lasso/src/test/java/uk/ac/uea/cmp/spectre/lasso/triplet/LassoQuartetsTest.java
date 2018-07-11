@@ -27,7 +27,9 @@ import uk.ac.uea.cmp.spectre.core.ds.quad.quartet.QuartetSystem;
 import uk.ac.uea.cmp.spectre.core.io.nexus.Nexus;
 import uk.ac.uea.cmp.spectre.core.io.nexus.NexusReader;
 import uk.ac.uea.cmp.spectre.core.io.nexus.NexusWriter;
+import uk.ac.uea.cmp.spectre.lasso.Lasso;
 import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
+import uk.ac.uea.cmp.spectre.lasso.LassoOptions;
 import uk.ac.uea.cmp.spectre.lasso.LassoTest;
 
 import java.io.File;
@@ -64,23 +66,24 @@ public class LassoQuartetsTest {
 
     @Test
     public void timeComparison() {
-        DistanceMatrix dm = new RandomDistanceGenerator().generateDistances(30);
+        DistanceMatrix dm = new RandomDistanceGenerator().generateDistances(100);
         List<Pair<Identifier, Identifier>> pairs = new ArrayList<>(dm.getMap().keySet());
         Collections.shuffle(pairs);
         //delete 20
         System.out.println("Deleting edges");
-        for(int i = 0; i < 90; i++) {
+        long delete = Math.round(((dm.getTaxa().size() * (dm.getTaxa().size() - 1))/2) * 0.15);
+        for(int i = 0; i < delete; i++) {
             dm.setDistance(pairs.get(i).getLeft(), pairs.get(i).getRight(), 0);
         }
         LassoQuartets lq = new LassoQuartets(dm);
         StopWatch timer = new StopWatch();
-//        System.out.println("Begin standard enriching");
-//        timer.start();
-//        lq.enrichMatrix();
-//        System.out.println("Finished enriching standard");
-//        timer.stop();
-//        System.out.println("Time: " + timer.getTime());
-//        timer.reset();
+        System.out.println("Begin standard enriching");
+        timer.start();
+        lq.enrichMatrix();
+        System.out.println("Finished enriching standard");
+        timer.stop();
+        System.out.println("Time: " + timer.getTime());
+        timer.reset();
         lq = new LassoQuartets(dm);
         timer.start();
         lq.altEnrichMatrix();

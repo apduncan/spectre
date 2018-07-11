@@ -85,15 +85,4 @@ public class IdentifierCombinations implements Iterable<IdentifierList> {
            return identifierCombination;
         }
     }
-
-    public static void main(String[] args) {
-        DistanceMatrix dm = new RandomDistanceGenerator().generateDistances(4);
-        IdentifierCombinations ic = new IdentifierCombinations(dm.getTaxa(), 2);
-        //Should output 15 distinct combinations, when given 6 taxa and asked for sets of 4
-        int i = 0;
-        for(List<Identifier> quad : ic) {
-            i++;
-            System.out.println(i + ": " + quad);
-        }
-    }
 }

@@ -36,6 +36,10 @@ public class TripletCoverFinder {
         this.graph = graph;
     }
 
+    /**
+     * Convert a potentially incomplete distance matrix into the minimal number of separate triplet covers.
+     * @return A set of matrices representing triplet covers
+     */
     public List<DistanceMatrix> findTripletCovers() {
         //Split input into connected components
         List<LassoDistanceGraph> components = this.graph.getConnectedComponents();
@@ -58,6 +62,14 @@ public class TripletCoverFinder {
         return triplets;
     }
 
+    /**
+     * Convert a chordal graph into a minimal number of triplet covers. When triangles joined at only one vertex, can be
+     * split into a separate triplet cover. Removes all edges in the located triplet cover from the graph before
+     * returning result.
+     * @param start A vertex to start searching for a triplet cover from. Should be a vertex of degree 2.
+     * @param graph The graph to search for a triplet cover in.
+     * @return The triplet cover that contain start vertex.
+     */
     private LassoDistanceGraph tripletSearch(Identifier start, LassoDistanceGraph graph) {
         Queue<Pair<Identifier, Identifier>> queue = new LinkedList<>();
         List<Pair<Identifier, Identifier>> visited = new ArrayList<>();
@@ -99,6 +111,11 @@ public class TripletCoverFinder {
         return tripletCover;
     }
 
+    /**
+     * All pairwise combinations from a set of elements
+     * @param set A set of Identifier to combine
+     * @return Pair combinations of members of set
+     */
     private Set<Pair<Identifier, Identifier>> allPairs(Set<Identifier> set) {
         IdentifierList list = new IdentifierList();
         Set<Pair<Identifier, Identifier>> edges = new HashSet<>();
@@ -112,18 +129,34 @@ public class TripletCoverFinder {
         return edges;
     }
 
+    /**
+     * Add a taxon to a graph without also adding a distance of 0 to each other taxon. Used to save time
+     * when dynamically constructing graphs. If graph already contains taxon, it will not be added, all taxa must
+     * be unique.
+     * @param taxon Taxon to add
+     * @param graph Graph taxon should be added to
+     */
     private void addTaxon(Identifier taxon, LassoDistanceGraph graph) {
         if(!graph.getTaxa().contains(taxon)) {
             graph.addIdentifierWithoutDistances(taxon);
         }
     }
 
+    /**
+     * Find a valid vertex to start looking for a triplet cover from.
+     * @param graph Graph to be searched
+     * @return The first degree 2 vertex in graph
+     */
     private Optional<Identifier> getStartVertex(LassoDistanceGraph graph) {
          return graph.getTaxa().stream()
                 .filter(vertex -> graph.getNeighbours(vertex).size() == 2)
                 .findFirst();
     }
 
+    /**
+     * Remove edges from a chordal graph which do not form part of a triangle.
+     * @param graph Graph to be trimmed
+     */
     private void removeLooseEdges(LassoDistanceGraph graph) {
         //Remove any loose edges (not part of a triangle)
         Set<Pair<Identifier, Identifier>> looseEdges = graph.getMap().entrySet().stream()
@@ -134,6 +167,12 @@ public class TripletCoverFinder {
         looseEdges.stream().forEach(graph::removeDistance);
     }
 
+    /**
+     * Determine if this edge forms part of a triangle in graph
+     * @param edge An edge in graph
+     * @param graph Graph
+     * @return Boolean
+     */
     private boolean edgeInTriangle(Pair<Identifier, Identifier> edge, LassoDistanceGraph graph) {
         //Determine if this edge forms part of a triangle
         Set<Identifier> leftNeighbour = graph.getNeighbours(edge.getLeft());

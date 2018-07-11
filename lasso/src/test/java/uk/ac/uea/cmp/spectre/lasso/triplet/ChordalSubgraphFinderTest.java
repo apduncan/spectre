@@ -15,11 +15,21 @@
 
 package uk.ac.uea.cmp.spectre.lasso.triplet;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
+import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.RandomDistanceGenerator;
+import uk.ac.uea.cmp.spectre.core.io.nexus.Nexus;
+import uk.ac.uea.cmp.spectre.core.io.nexus.NexusReader;
+import uk.ac.uea.cmp.spectre.core.io.nexus.NexusWriter;
 import uk.ac.uea.cmp.spectre.lasso.Lasso;
 import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
+import uk.ac.uea.cmp.spectre.lasso.LassoTest;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 public class ChordalSubgraphFinderTest {
     @Test
@@ -32,12 +42,36 @@ public class ChordalSubgraphFinderTest {
 
     @Test
     public void find() {
-        double[][] matrix = {{0, 1, 1, 0, 0, 0}, {1, 0, 0, 1, 0, 0}, {1, 0, 0, 1, 1, 1}, {0, 1, 1, 0, 1, 0}, {0, 0, 1, 1, 0, 1}, {0, 0, 1, 0, 1, 0}};
+        double[][] matrix = {{0, 2, 3, 0, 0}, {2, 0, 3, 4, 0}, {3, 3, 0, 3, 3}, {0, 4, 3, 0, 2}, {0, 0, 3, 2, 0}};
         LassoDistanceGraph lg = new LassoDistanceGraph(new FlexibleDistanceMatrix(matrix));
         ChordalSubgraphFinder cf = new ChordalSubgraphFinder();
 //        LassoDistanceGraph chordalSub = cf.find(lg);
 //        System.out.println(chordalSub);
-        lg = new LassoDistanceGraph(new RandomDistanceGenerator().generateDistances(300));
+        try {
+            NexusReader reader = new NexusReader();
+            File input = FileUtils.toFile(LassoTest.class.getResource("/paradoxus-part-question.nex"));
+            Nexus file = reader.parse(input);
+            lg = new LassoDistanceGraph(new FlexibleDistanceMatrix(file.getDistanceMatrix()));
+        } catch (IOException io) {
+
+        }
         LassoDistanceGraph chordalSub = cf.find(lg);
+        List<DistanceMatrix> triplets = new TripletCoverFinder(chordalSub).findTripletCovers();
+        //Attempt to complete
+        LassoQuartets shell = new LassoQuartets(triplets.get(0));
+        DistanceMatrix dm = shell.altEnrichMatrix();
+        System.out.println(dm.getMap().size());
+        File output = new File("/home/hal/complete-paradoxus.nex");
+        NexusWriter writer = new NexusWriter();
+        writer.appendHeader();
+        writer.appendLine();
+        writer.append(dm.getTaxa());
+        writer.appendLine();
+        writer.append(dm);
+        try {
+            writer.write(output);
+        } catch (IOException e) {
+
+        }
     }
 }
