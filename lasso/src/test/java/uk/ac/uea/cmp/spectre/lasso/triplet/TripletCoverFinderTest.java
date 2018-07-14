@@ -37,7 +37,7 @@ public class TripletCoverFinderTest {
     public void findTripletCovers() {
         LassoDistanceGraph lg = new LassoDistanceGraph(new RandomDistanceGenerator().generateDistances(5));
         TripletCoverFinder tc = new TripletCoverFinder(lg);
-        List<DistanceMatrix> covers = tc.findTripletCovers();
+        List<LassoDistanceGraph> covers = tc.findTripletCovers();
         System.out.println(covers.size());
         double[][] matrix = {{0, 1, 1, 0, 0}, {1, 0, 1, 0, 0}, {1, 1, 0, 1, 1}, {0, 0, 1, 0, 1}, {0, 0, 1, 1, 0}};
         lg = new LassoDistanceGraph(new FlexibleDistanceMatrix(matrix));

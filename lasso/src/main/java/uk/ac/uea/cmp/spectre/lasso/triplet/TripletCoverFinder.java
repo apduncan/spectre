@@ -31,7 +31,8 @@ import java.util.stream.Collectors;
  * which can be resolved to an unrooted tree
  */
 public class TripletCoverFinder {
-    LassoDistanceGraph graph;
+    private LassoDistanceGraph graph;
+
     public TripletCoverFinder(LassoDistanceGraph graph) {
         this.graph = graph;
     }
@@ -40,14 +41,14 @@ public class TripletCoverFinder {
      * Convert a potentially incomplete distance matrix into the minimal number of separate triplet covers.
      * @return A set of matrices representing triplet covers
      */
-    public List<DistanceMatrix> findTripletCovers() {
-        //Split input into connected components
-        List<LassoDistanceGraph> components = this.graph.getConnectedComponents();
-        List<DistanceMatrix> triplets = new ArrayList<>();
-        ChordalSubgraphFinder chordalFinder = new ChordalSubgraphFinder();
+    public List<LassoDistanceGraph> findTripletCovers(ChordalSubgraphFinder.SEED_TREE seedMethod) {
+        //Split input into connected components which are greater than size 3 (as need at least 4 to find a diamond)
+        List<LassoDistanceGraph> components = this.graph.getConnectedComponents().stream()
+                .filter(c -> c.getTaxa().size() > 3).collect(Collectors.toList());
+        List<LassoDistanceGraph> triplets = new ArrayList<>();
         for(LassoDistanceGraph component : components) {
             //For each connected component get the maximal chordal subgraph
-            LassoDistanceGraph chordalSub = chordalFinder.find(component);
+            LassoDistanceGraph chordalSub = new ChordalSubgraphFinder(component).find(seedMethod);
             //Remove any loose edges (not part of a triangle)
             removeLooseEdges(chordalSub);
             //Start at a random degree 2 vertex
@@ -59,7 +60,11 @@ public class TripletCoverFinder {
                 start = getStartVertex(chordalSub);
             }
         }
-        return triplets;
+        return triplets.stream().filter(cover -> cover.getTaxa().size() > 3).collect(Collectors.toList());
+    }
+
+    public List<LassoDistanceGraph> findTripletCovers() {
+        return findTripletCovers(ChordalSubgraphFinder.SEED_DEFAULT);
     }
 
     /**

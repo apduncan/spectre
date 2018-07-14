@@ -28,20 +28,26 @@ import java.util.function.Consumer;
 public class ChordalSubgraphFinder {
     private LassoDistanceGraph graph;
     private LassoDistanceGraph subgraph;
+    public final static SEED_TREE SEED_DEFAULT = SEED_TREE.BREADTH;
+    public enum SEED_TREE {
+        DEPTH, BREADTH
+    };
 
-    public ChordalSubgraphFinder() {
+    public ChordalSubgraphFinder(LassoDistanceGraph graph) {
+        this.graph = new LassoDistanceGraph(graph);
     }
 
     /**
      * Locates a maximal chordal subgraph of the input graph, return the subgraph.
-     * @param graph The supergraph
      * @return A maximal chordal subgraph of the input
      */
-    public LassoDistanceGraph find(LassoDistanceGraph graph) {
-        this.graph = graph;
+    public LassoDistanceGraph find(SEED_TREE seedTree) {
         //Initialise the subgraph to a spanning tree of the source graph, this will be chordal
         TreeAccumulator bfsTree = new TreeAccumulator(this.graph);
-        this.graph.breadthFirstSearch(this.graph.getTaxa().getFirst(), null, bfsTree, null);
+        if(seedTree == SEED_TREE.BREADTH)
+            this.graph.breadthFirstSearch(this.graph.getTaxa().getFirst(), null, bfsTree, null);
+        if(seedTree == SEED_TREE.DEPTH)
+            this.graph.depthFirstSearch(this.graph.getTaxa().getFirst(), new ArrayList<Identifier>(), null, bfsTree);
         this.subgraph = bfsTree.getBfsTree();
         Set<Pair<Identifier, Identifier>> candidateEdges = new HashSet<>();
         for(Identifier vertex : subgraph.getTaxa()) {
@@ -62,6 +68,10 @@ public class ChordalSubgraphFinder {
 
         }
         return subgraph;
+    }
+
+    public LassoDistanceGraph find() {
+        return this.find(SEED_DEFAULT);
     }
 
     /**
@@ -95,15 +105,20 @@ public class ChordalSubgraphFinder {
             Set<Identifier> neighbourIntersection = subgraph.getNeighbours(triedge.getLeft());
             neighbourIntersection.retainAll(subgraph.getNeighbours(triedge.getRight()));
             if(neighbourIntersection.size() > 0) {
-                //{vab} union neighbourIntersection (call this u) is diamond
+                //find out which vertex of candidate edge is not involved in the cord
+                Identifier y = triedge.getRight().equals(edge.getRight()) ? edge.getLeft() : edge.getRight();
+                Identifier x = triedge.getRight();
                 //check that it meets the criteria for an acceptable diamond.
-                //uv is the missing distance. ab is distance being added
+                //cord uy is unknown, xv is known
+                //For a diamond to be resolved, the cycle (diamond less the chord) must be skew
+                //For cycle {uvyx}, skew if d(u,v) + d(x,y) != d(v,y) + d(u,x)
+                //Either side of the inequality is a parallel edge in the diamond
                 Identifier u = neighbourIntersection.stream().findFirst().get();
-                Double dxy = graph.getDistance(u, triedge.getRight());
-                Double duz = graph.getDistance(v, triedge.getLeft());
-                Double dxu = graph.getDistance(triedge.getLeft(), u);
-                Double dyz = graph.getDistance(triedge.getRight(), v);
-                if(dxy + duz >= dxu + dyz)
+                Double duv = graph.getDistance(u, v);
+                Double dxy = graph.getDistance(x, y);
+                Double dvy = graph.getDistance(v, y);
+                Double dux = graph.getDistance(u, x);
+                if(duv + dxy == dvy + dux)
                     return false;
             }
         }

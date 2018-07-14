@@ -529,7 +529,7 @@ public class NexusWriter extends AbstractSpectreWriter implements Appendable {
         //Iterate over existing quartets
         for(Map.Entry<Quad, Double> entry : quartets.getQuartets().entrySet()) {
             Double weight = entry.getValue();
-            String quartet =  "";
+            String quartet =  weighted ? entry.getValue().toString()  + " " : "";
             int i = 0;
             for(int idx : entry.getKey().toIntArray()) {
                 quartet = quartet + idx + " ";

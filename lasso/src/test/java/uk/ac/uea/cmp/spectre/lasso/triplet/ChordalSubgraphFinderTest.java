@@ -36,15 +36,15 @@ public class ChordalSubgraphFinderTest {
     public void spanningTree() {
         double[][] matrix = {{0, 1, 1, 0}, {1, 0, 1, 0}, {1, 1, 0, 0}, {1, 0, 0, 0}};
         LassoDistanceGraph lg = new LassoDistanceGraph(new FlexibleDistanceMatrix(matrix));
-        ChordalSubgraphFinder chordal = new ChordalSubgraphFinder();
-        chordal.find(lg);
+        ChordalSubgraphFinder chordal = new ChordalSubgraphFinder(lg);
+        chordal.find();
     }
 
     @Test
     public void find() {
         double[][] matrix = {{0, 2, 3, 0, 0}, {2, 0, 3, 4, 0}, {3, 3, 0, 3, 3}, {0, 4, 3, 0, 2}, {0, 0, 3, 2, 0}};
         LassoDistanceGraph lg = new LassoDistanceGraph(new FlexibleDistanceMatrix(matrix));
-        ChordalSubgraphFinder cf = new ChordalSubgraphFinder();
+        ChordalSubgraphFinder cf = new ChordalSubgraphFinder(lg);
 //        LassoDistanceGraph chordalSub = cf.find(lg);
 //        System.out.println(chordalSub);
         try {
@@ -55,8 +55,8 @@ public class ChordalSubgraphFinderTest {
         } catch (IOException io) {
 
         }
-        LassoDistanceGraph chordalSub = cf.find(lg);
-        List<DistanceMatrix> triplets = new TripletCoverFinder(chordalSub).findTripletCovers();
+        LassoDistanceGraph chordalSub = cf.find();
+        List<LassoDistanceGraph> triplets = new TripletCoverFinder(chordalSub).findTripletCovers();
         //Attempt to complete
         LassoQuartets shell = new LassoQuartets(triplets.get(0));
         DistanceMatrix dm = shell.altEnrichMatrix();

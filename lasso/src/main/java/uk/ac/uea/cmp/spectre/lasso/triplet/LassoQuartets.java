@@ -24,14 +24,17 @@ import uk.ac.uea.cmp.spectre.core.ds.distance.RandomDistanceGenerator;
 import uk.ac.uea.cmp.spectre.core.ds.quad.Quad;
 import uk.ac.uea.cmp.spectre.core.ds.quad.SpectreQuad;
 import uk.ac.uea.cmp.spectre.core.ds.quad.quartet.QuartetSystem;
+import uk.ac.uea.cmp.spectre.core.io.nexus.NexusWriter;
 import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class LassoQuartets {
     private LassoDistanceGraph matrix;
@@ -210,23 +213,40 @@ public class LassoQuartets {
         if(distancesInMatrix(missing))
             return false;
 
-        //Check the missing distance is a cherry
-        //Remove the taxa from the misisng pair from the combination
+        //Check that his diamond is resolved
+        //For a diamond to be resolved, the cycle (diamond less the chord) must be skew
+        //For cycle {x,y,z,w}, skew if d(x,y) + d(z,w) != d(x,w) + d(y,z)
+        //Either side of the inequality is a parallel edge in the diamond
+
         IdentifierList knownPair = new IdentifierList(combination);
         knownPair.remove(missing.getRight());
         knownPair.remove(missing.getLeft());
-        //Missing cord xz must satisfy d(x,y) + d(u,z) < d(x,u) + d(y,z)
-        Double dxy = matrix.getDistance(missing.getLeft(), knownPair.get(0));
-        Double duz = matrix.getDistance(missing.getRight(), knownPair.get(1));
-        Double dxu = matrix.getDistance(knownPair.get(1), missing.getLeft());
-        Double dyz = matrix.getDistance(knownPair.get(0), missing.getRight());
-        if(dxy + duz >= dxu + dyz)
+        double dxy = matrix.getDistance(missing.getLeft(), knownPair.get(0));
+        double dzw = matrix.getDistance(missing.getRight(), knownPair.get(1));
+        double dxw = matrix.getDistance(missing.getLeft(), knownPair.get(1));
+        double dyz = matrix.getDistance(missing.getRight(), knownPair.get(0));
+
+        if((dxy + dzw) == (dxw + dyz))
             return false;
 
-        //This is a valid quartet, so induce distance xz and add to matrix
-        Double dxz = dxu + dyz - matrix.getDistance(knownPair.get(0), knownPair.get(1));
-        matrix.setDistance(missing.getLeft(), missing.getRight(), dxz);
+        //If this is resolved, then the distance of the missing cord can be inferred
+        //For missing cord yw, d(y,w) = max{d(x,y) + d(z,w), d(x,w) + d(y,z)} - d(x,y)
+        double dxu = matrix.getDistance(knownPair.get(0), knownPair.get(1));
+        double dyw = Math.max(dxy + dzw, dxw + dyz) - dxu;
+        matrix.setDistance(missing.getRight(), missing.getLeft(), dyw);
         return true;
+    }
+
+    /**
+     * Returns a stream which can generate all valid quartets from the current matrix. The quartets are not generated
+     * until a terminal operation is called on the stream, so the terminal operation will be when computation occurs.
+     * @return A stream which will generate all quartets
+     */
+    public Stream<Quad> quartetStream() {
+        IdentifierCombinations combinations = new IdentifierCombinations(matrix.getTaxa(), 4);
+        return StreamSupport.stream(combinations.spliterator(), false)
+            .map(this::getQuartet)
+            .filter(quartet -> quartet != null);
     }
 
 
@@ -235,19 +255,58 @@ public class LassoQuartets {
      * condition.
      * @return All valid quartets in the matrix
      */
-    public QuartetSystem getQuartets() {
+    public QuartetSystem getQuartets(boolean weighted) {
         //Iterate over every combination of taxa
         //Attempt to find a valid quartet and which pairs are cherries
         QuartetSystem quartets = new QuartetSystem();
         quartets.setTaxa(matrix.getTaxa());
-        IdentifierCombinations combinations = new IdentifierCombinations(matrix.getTaxa(), 4);
-        for(IdentifierList quad: combinations) {
-            Quad quartet = getQuartet(quad);
-            if(quartet != null) {
-                quartets.getQuartets().put(quartet, Double.valueOf(0));
-            }
-        }
+        //TODO: Replace with collect operation which instantiates a quartet system and adds to it
+        quartetStream().forEach(quartet -> {
+            quartets.getQuartets().put(quartet, weighted ? getQuartetWeight(quartet) : 1);
+        });
         return quartets;
+    }
+
+    /**
+     * Write quartets out into nexus file. Does not write header, taxa info, this will only write the quartet block
+     * @return The NexusWriter
+     */
+    public StringBuilder getQuartetsAsString(boolean weighted) {
+        //Find quartets, and write them directly into a StringBuilder object. Avoid having to hold large quartet system
+        //and large string output in memory simultaneously.
+        StringBuilder writer = new StringBuilder();
+        writer.append("BEGIN Quartets;\n");
+        writer.append("  DIMENSIONS NTAX=" + matrix.getTaxa().size() + " NQUARTETS=");
+        //need to insert number of quartets later, so store the end position
+        int noPos =  writer.length();
+        AtomicLong quartetsFound = new AtomicLong(0);
+        writer.append("\n  FORMAT\n");
+        writer.append("    LABELS=NO\n");
+        writer.append("    WEIGHTS=" + (weighted ? "YES" : "NO") + "\n");
+        writer.append("  ;\n");
+        writer.append("  MATRIX\n");
+        //Iterate over existing quartets
+        quartetStream().forEach(quartet -> {
+            quartetsFound.incrementAndGet();
+            writer.append("    " + (weighted ? getQuartetWeight(quartet).toString() : "") + quartetToString(quartet) + "\n");
+        });
+        writer.append("  ;\n");
+        writer.append("END; [Quartets]\n");
+        //Add in the number of quartets found
+        writer.insert(noPos, quartetsFound.toString() + ";\n");
+        return writer;
+    }
+
+    private String quartetToString(Quad quartet) {
+        String string = "0 ";
+        int i = 0;
+        for(int idx : quartet.toIntArray()) {
+            string = string + idx + " ";
+            string = string + (i == 1 ? ": ": "");
+            i++;
+        }
+        string = string.trim() + ",";
+        return string;
     }
 
     /**
@@ -265,14 +324,42 @@ public class LassoQuartets {
         double bcad = matrix.getDistance(quad.get(1), quad.get(2)) + matrix.getDistance(quad.get(0), quad.get(3));
         double abcd = matrix.getDistance(quad.get(0), quad.get(1)) + matrix.getDistance(quad.get(2), quad.get(3));
         double bdac = matrix.getDistance(quad.get(1), quad.get(3)) + matrix.getDistance(quad.get(0), quad.get(2));
+        //The two which are not minimal must be equal
+        double min = Math.min(bcad, Math.min(abcd, bdac));
+        if(abcd == min && bcad != bdac)
+            return null;
+        if(bcad == min && abcd != bdac)
+            return null;
+        if(bdac == min && bcad != abcd)
+            return null;
         //The distance which is smaller that the sum of the other two has the two cherries
-        if(bcad < Math.max(abcd, bdac))
+        if(bcad == min)
             return new SpectreQuad(quad.get(1).getId(), quad.get(2).getId(), quad.get(0).getId(), quad.get(3).getId());
-        if(abcd < Math.max(bcad, bdac))
+        if(abcd == min)
             return new SpectreQuad(quad.get(0).getId(), quad.get(1).getId(), quad.get(2).getId(), quad.get(3).getId());
-        if(bdac < Math.max(bcad, abcd))
+        if(bdac == min)
             return new SpectreQuad(quad.get(1).getId(), quad.get(3).getId(), quad.get(0).getId(), quad.get(2).getId());
         return null;
+    }
+
+    /**
+     * Calculate the weight of a quartet. The weight of a quartet is the length of the internal edge. Assumes that the
+     * quartet fits the four point condition.
+     * @param quartet Quartet to weight
+     * @return Weight of the internal edge of the quartet
+     */
+    private Double getQuartetWeight(Quad quartet) {
+        //Weight of a quartet is the weight of the internal edge
+        Identifier a = matrix.getTaxa().getById(quartet.getA());
+        Identifier b = matrix.getTaxa().getById(quartet.getB());
+        Identifier c = matrix.getTaxa().getById(quartet.getC());
+        Identifier d = matrix.getTaxa().getById(quartet.getD());
+        //Quartet is ab|cd
+        Double ab = matrix.getDistance(a, b);
+        Double cd = matrix.getDistance(c, d);
+        Double ac = matrix.getDistance(a, c);
+        Double bd = matrix.getDistance(b, d);
+        return ((ac+bd)-(ab+cd))/2;
     }
 
     /**

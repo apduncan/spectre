@@ -347,7 +347,7 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
         List<LassoDistanceGraph> components = new ArrayList<>();
         while (startCandidates.size() > 0) {
             ComponentAccumulator component = new ComponentAccumulator(this);
-            List<Identifier> found = depthFirstSearch(startCandidates.get(0), new ArrayList<>(), component);
+            List<Identifier> found = depthFirstSearch(startCandidates.get(0), new ArrayList<>(), component, null);
             //Remove found vertices from start candidates
             startCandidates.removeAll(found);
             components.add(component.getComponent());
@@ -362,13 +362,17 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
      * @param vertexVisit A consumer object which should be applied to each visited vertex. Optional.
      * @return Vertices reachable from vertex
      */
-    public List<Identifier> depthFirstSearch(Identifier vertex, List<Identifier> visited, Consumer<Identifier> vertexVisit) {
+    public List<Identifier> depthFirstSearch(Identifier vertex, List<Identifier> visited, Consumer<Identifier> vertexVisit,
+            Consumer<Pair<Identifier, Identifier>> edgeVisit) {
         visited.add(vertex);
+        if (vertexVisit != null)
+            vertexVisit.accept(vertex);
         for (Identifier neighbour : this.getNeighbours(vertex)) {
             if (!visited.contains(neighbour)) {
-                depthFirstSearch(neighbour, visited, vertexVisit);
-                if (vertexVisit != null)
-                    vertexVisit.accept(vertex);
+                if(edgeVisit != null)
+                    edgeVisit.accept(new ImmutablePair<>(vertex, neighbour));
+                depthFirstSearch(neighbour, visited, vertexVisit, edgeVisit);
+
             }
         }
         return visited;
@@ -381,7 +385,7 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
      * @return Vertices reachable from vertex
      */
     public List<Identifier> depthFirstSearch(Identifier vertex) {
-        return depthFirstSearch(vertex, new ArrayList<Identifier>(), null);
+        return depthFirstSearch(vertex, new ArrayList<Identifier>(), null, null);
     }
 
     /**
@@ -392,7 +396,7 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
      * @return Vertices reachable from vertex
      */
     public List<Identifier> depthFirstSearch(Identifier vertex, Consumer<Identifier> visit) {
-        return depthFirstSearch(vertex, new ArrayList<Identifier>(), visit);
+        return depthFirstSearch(vertex, new ArrayList<Identifier>(), visit, null);
     }
 
     /**

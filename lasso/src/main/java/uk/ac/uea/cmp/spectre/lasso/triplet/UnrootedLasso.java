@@ -13,13 +13,12 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso;
+package uk.ac.uea.cmp.spectre.lasso.triplet;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.io.SpectreReader;
 import uk.ac.uea.cmp.spectre.core.io.SpectreReaderFactory;
@@ -27,34 +26,34 @@ import uk.ac.uea.cmp.spectre.core.io.nexus.Nexus;
 import uk.ac.uea.cmp.spectre.core.io.nexus.NexusReader;
 import uk.ac.uea.cmp.spectre.core.ui.gui.RunnableTool;
 import uk.ac.uea.cmp.spectre.core.ui.gui.StatusTracker;
+import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
 
-public class Lasso extends RunnableTool {
-    private static Logger logger = LoggerFactory.getLogger(Lasso.class);
-    private LassoOptions options;
+public class UnrootedLasso extends RunnableTool {
+    private UnrootedLassoOptions options;
+    private static Logger logger = LoggerFactory.getLogger(UnrootedLasso.class);
 
-    public Lasso() {
-        this(new LassoOptions());
-    }
-
-    public Lasso(LassoOptions options) {
+    public UnrootedLasso(UnrootedLassoOptions options) {
         this.options = options;
     }
 
-    public Lasso(LassoOptions options, StatusTracker tracker) {
+    public UnrootedLasso(UnrootedLassoOptions options, StatusTracker tracker) {
         super(tracker);
         this.options = options;
     }
 
-    public LassoOptions getOptions() {
-        return options;
+    public UnrootedLasso() {
+        this(new UnrootedLassoOptions());
     }
 
-    public void setOptions(LassoOptions options) {
+    public void setOptions(UnrootedLassoOptions options) {
         this.options = options;
+    }
+
+    public UnrootedLassoOptions getOptions() {
+        return this.options;
     }
 
     private void notifyUser(String message) {
@@ -64,7 +63,6 @@ public class Lasso extends RunnableTool {
 
     @Override
     public void run() {
-        //Run lasso using the current set options
         try {
             //Timing
             StopWatch stopwatch = new StopWatch();
@@ -78,58 +76,48 @@ public class Lasso extends RunnableTool {
 
             DistanceMatrix matrix = null;
             //Nexus format has different method for reading distance matrices
-            if(reader.getIdentifier() == "NEXUS") {
+            if (reader.getIdentifier() == "NEXUS") {
                 Nexus nexus = new NexusReader().parse(this.options.getInput());
                 matrix = nexus.getDistanceMatrix();
             } else {
                 matrix = reader.readDistanceMatrix(this.options.getInput());
             }
 
-            if(matrix == null)
+            if (matrix == null)
                 throw new IOException("Could not find distance matrix in input");
 
             this.notifyUser("Loaded distance matrix containing " + matrix.size() + " taxa");
-            this.notifyUser("Executing Lasso");
-            LassoResult result = this.execute(matrix);
+            this.notifyUser("Executing Unrooted Lasso");
+            UnrootedLassoResult result = this.execute(matrix);
             this.notifyUser("Saving results to disk");
             result.save(this.options.getOutput());
             stopwatch.stop();
             this.notifyUser("Completed - Run time: " + stopwatch.toString());
             this.trackerFinished(true);
-        } catch(Exception e) {
-            this.notifyUser(e.getMessage());
-            this.setError(e);
-            this.trackerFinished(false);
+        } catch (Exception err) {
+            this.notifyUser(err.toString());
+            this.setError(err);
         } finally {
             this.notifyListener();
         }
     }
 
-    private LassoResult execute(DistanceMatrix matrix) {
-        List<LassoResult> results = new ArrayList<>();
-        //Instantiate clique finder and distance updater objects based on options
-        DistanceUpdater updater = this.getOptions().getUpdater().get(this.getOptions());
-        CliqueFinder finder = this.getOptions().getCliqueFinder().get(this.getOptions());
-        final LassoDistanceGraph original = new LassoDistanceGraph(matrix);
-        //Run user defined number of times, then select result with most taxa
-        for(int i = 0; i < this.getOptions().getLassoRuns(); i++) {
-            this.notifyUser("Executing Lasso run " + (i+1) + " of " + this.getOptions().getLassoRuns());
-            //Make a new copy of the graph from the input matrix
-            LassoDistanceGraph graph = new LassoDistanceGraph(matrix);
-            long countEdges = 0;
-            do {
-                Set<Identifier> clique = finder.find(graph);
-                graph.joinCluster(new ArrayList<>(clique), updater);
-                countEdges = graph.getMap().values().stream().filter(length -> length > 0).count();
-            } while(countEdges > 0);
-            //Map cords to weights
-            Map<Pair<Identifier, Identifier>, Double> distances = graph.getDistancesUsed().parallelStream().
-                    collect(Collectors.toMap(pair -> pair, pair -> original.getDistance(pair.getLeft(), pair.getRight())));
-            results.add(new LassoResult(graph.getAllClusters(), distances));
+    private UnrootedLassoResult execute(DistanceMatrix input) {
+        UnrootedLassoResult result = new UnrootedLassoResult();
+        this.notifyUser("Locating triplet covers in input");
+        List<LassoDistanceGraph> tripletCovers = new TripletCoverFinder(new LassoDistanceGraph(input))
+                .findTripletCovers(this.options.getSeedTree());
+        this.notifyUser(tripletCovers.size() + " triplet covers located");
+        //For each component, construct a chordal subgraph
+        int i = 1;
+        for(LassoDistanceGraph cover: tripletCovers) {
+            //For each triplet cover, convert this to a tree metric
+            String tripletMessage = "[Triplet Cover " + i + " of " + tripletCovers.size() + ", " + cover.getTaxa().size() + " taxa] ";
+            this.notifyUser(tripletMessage + "Building tree metric from triplet cover");
+            DistanceMatrix treeMetric = new LassoQuartets(cover).altEnrichMatrix();
+            result.addResult(cover, treeMetric);
+            i++;
         }
-        //Return result with a cluster which has the largest single tree (largest being contains most taxa)
-        return results.stream()
-                .max(Comparator.comparingInt(result -> result.sizeLargestTree()))
-                .get();
+        return result;
     }
 }
