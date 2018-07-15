@@ -50,9 +50,9 @@ public class UnrootedLassoTest {
     @Test
     public void run() throws IOException {
         //Create a random matrix
-        DistanceMatrix matrix = new RandomDistanceGenerator().generateDistances(25);
+        DistanceMatrix matrix = new RandomDistanceGenerator().generateDistances(90);
         //Delete random 20%
-        matrix = deleteRandom(matrix, 20);
+        matrix = deleteRandom(matrix, 90);
         //Save out
         File input = folder.newFile("random.nex");
         File output = folder.newFile("output.nex");

@@ -55,7 +55,7 @@ public class UnrootedLassoResult {
         } else {
             //Write multiple files
             //iterate over all results
-            final String prefix = file.toString().substring(file.toString().length() - 4);
+            final String prefix = file.toString().substring(0, file.toString().length() - 4);
             final String suffix = ".nex";
             int sequence = 1;
             for(Pair<LassoDistanceGraph, DistanceMatrix> result : this.results) {
@@ -79,8 +79,8 @@ public class UnrootedLassoResult {
         lasso.getMap().entrySet().stream()
                 .filter(e -> e.getValue() > 0)
                 .map(entry -> "[" + entry.getKey().getRight().getName() + " -> " + entry.getKey().getLeft().getName() +
-                ", " + entry.getValue().toString())
-                .forEach(s -> writer.append(s));
+                ", " + entry.getValue().toString() + "]")
+                .forEach(s -> writer.appendLine(s));
         writer.write(file);
     }
 }
