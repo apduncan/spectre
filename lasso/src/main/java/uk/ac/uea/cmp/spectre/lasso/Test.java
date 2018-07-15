@@ -15,18 +15,12 @@
 
 package uk.ac.uea.cmp.spectre.lasso;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
-import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
-import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.RandomDistanceGenerator;
-import uk.ac.uea.cmp.spectre.core.io.nexus.Nexus;
-import uk.ac.uea.cmp.spectre.core.io.nexus.NexusWriter;
+import uk.ac.uea.cmp.spectre.lasso.lasso.CliqueFinder;
+import uk.ac.uea.cmp.spectre.lasso.lasso.CliqueFinderFactory;
+import uk.ac.uea.cmp.spectre.lasso.lasso.LassoOptions;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 public class Test {
@@ -98,8 +92,8 @@ public class Test {
                 {4, 2, 2, 0, 6, 0, 0}, {0, 0, 6, 6, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 2}, {0, 0, 0, 0, 0, 2, 0} };*//*
         uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph simpleGraph = new uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph(new RandomDistanceGenerator().generateDistances(503));
         //make some objects
-        uk.ac.uea.cmp.spectre.lasso.DistanceUpdater modal = uk.ac.uea.cmp.spectre.lasso.DistanceUpdaterFactory.MODAL.get(new uk.ac.uea.cmp.spectre.lasso.LassoOptions());
-        uk.ac.uea.cmp.spectre.lasso.CliqueFinder heuristic = uk.ac.uea.cmp.spectre.lasso.CliqueFinderFactory.HEURISTIC.get(new uk.ac.uea.cmp.spectre.lasso.LassoOptions());
+        uk.ac.uea.cmp.spectre.lasso.lasso.DistanceUpdater modal = uk.ac.uea.cmp.spectre.lasso.lasso.DistanceUpdaterFactory.MODAL.get(new uk.ac.uea.cmp.spectre.lasso.lasso.LassoOptions());
+        uk.ac.uea.cmp.spectre.lasso.lasso.CliqueFinder heuristic = uk.ac.uea.cmp.spectre.lasso.lasso.CliqueFinderFactory.HEURISTIC.get(new uk.ac.uea.cmp.spectre.lasso.lasso.LassoOptions());
         long countEdges = 0;
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();

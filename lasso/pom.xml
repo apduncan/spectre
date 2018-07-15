@@ -32,7 +32,7 @@
                     <repositoryLayout>flat</repositoryLayout>
                     <programs>
                         <program>
-                            <mainClass>uk.ac.uea.cmp.spectre.lasso.LassoCLI</mainClass>
+                            <mainClass>uk.ac.uea.cmp.spectre.lasso.lasso.LassoCLI</mainClass>
                             <id>lasso</id>
                             <jvmSettings>
                                 <extraArguments>

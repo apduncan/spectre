@@ -96,7 +96,7 @@ public class QuartetWeights extends Triplet<Double> {
     /**
      * Investigate which topology of a, b, c, d that the topologies of x, y, u, v correspond to, and set weights accordingly
      * See if xy|uv is ab|cd (w1), ac|bd (w2), or ad|bc (w3)
-     * The first length of the stored triplet
+     * The first length of the stored quartet
      * @param q1 Quartet 1
      * @param q2 Quartet 2
      * @param newW New Weight

@@ -51,7 +51,7 @@ import uk.ac.uea.cmp.spectre.flatnj.FlatNJGUI;
 import uk.ac.uea.cmp.spectre.net.netmake.NetMakeGUI;
 import uk.ac.uea.cmp.spectre.net.netme.NetMEGUI;
 import uk.ac.uea.cmp.spectre.qtools.superq.SuperQGUI;
-import uk.ac.uea.cmp.spectre.lasso.LassoGUI;
+import uk.ac.uea.cmp.spectre.lasso.lasso.LassoGUI;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;

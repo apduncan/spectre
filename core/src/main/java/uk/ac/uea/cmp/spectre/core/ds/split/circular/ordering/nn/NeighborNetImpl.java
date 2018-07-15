@@ -82,7 +82,7 @@ public class NeighborNetImpl implements CircularOrderingCreator {
 
         // Sanity check
         if (!this.stackedVertexTriplets.empty()) {
-            throw new IllegalStateException("Vertex triplet stack still contains entries.  Something went wrong in the NN algorithm.");
+            throw new IllegalStateException("Vertex quartet stack still contains entries.  Something went wrong in the NN algorithm.");
         }
 
         return circularOrdering;
@@ -224,12 +224,12 @@ public class NeighborNetImpl implements CircularOrderingCreator {
                     (c1v.get(0).equals(sv1) || c1v.get(0).equals(sv2)) ? c1v.get(0) : c1v.get(1);
             Identifier third = c1v.size() == 1 && (c2v.get(0).equals(sv1) || c2v.get(0).equals(sv2)) ? c2v.get(1) : c2v.get(0);
 
-            // Put triplet into canonical form (i.e. the first vertex's ID should be lower than third vertex's ID
+            // Put quartet into canonical form (i.e. the first vertex's ID should be lower than third vertex's ID
             //final boolean reverse = first.getId() > third.getId();
             final boolean reverse = false;
             final VertexTriplet triplet = reverse ? new VertexTriplet(third, second, first) : new VertexTriplet(first, second, third);
 
-            // Add triplet to stack; Reduce triplet of vertices to two new vertices; Update V2V matrix; Return the two new vertices.
+            // Add quartet to stack; Reduce quartet of vertices to two new vertices; Update V2V matrix; Return the two new vertices.
             return vertexTripletReduction(triplet);
 
         } else if (nbVerticies == 4) {
@@ -249,11 +249,11 @@ public class NeighborNetImpl implements CircularOrderingCreator {
                     c2v.get(1) :
                     c2v.get(0);
 
-            // Put triplet into canonical form (i.e. the first vertex's ID should be lower than third vertex's ID
+            // Put quartet into canonical form (i.e. the first vertex's ID should be lower than third vertex's ID
             //final boolean reverse = first.getId() > fourth.getId();
             final boolean reverse = false;
 
-            // Because we have 4 vertices we need to do two triplet reductions
+            // Because we have 4 vertices we need to do two quartet reductions
             if (reverse) {
                 Pair<Identifier, Identifier> newVertices1 = this.vertexTripletReduction(new VertexTriplet(first, second, third));
                 Pair<Identifier, Identifier> newVertices2 = this.vertexTripletReduction(new VertexTriplet(newVertices1.getLeft(), newVertices1.getRight(), fourth));
@@ -283,7 +283,7 @@ public class NeighborNetImpl implements CircularOrderingCreator {
         // Add the selected vertices to reduce to the stack (we'll need these later)
         this.stackedVertexTriplets.push(selectedVertices);
 
-        // Let the matrix class handle the V2V update, return the two new vertices created from merging the input triplet
+        // Let the matrix class handle the V2V update, return the two new vertices created from merging the input quartet
         return this.updateV2V(selectedVertices);
     }
 

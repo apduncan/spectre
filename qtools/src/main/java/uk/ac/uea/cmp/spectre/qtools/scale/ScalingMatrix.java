@@ -332,7 +332,7 @@ public class ScalingMatrix {
 
                         if (wvi != null && wvj != null) {
 
-                            //check first weight in triplet
+                            //check first weight in quartet
                             if (wvi.getA() == 0.0) {
                                 if (wvj.getA() > 0.0) {
                                     this.perfectMatch = false;
@@ -351,7 +351,7 @@ public class ScalingMatrix {
                                 }
                             }
 
-                            //check second weight in triplet
+                            //check second weight in quartet
                             if (wvi.getB() == 0.0) {
                                 if (wvj.getB() > 0.0) {
                                     this.perfectMatch = false;
@@ -370,7 +370,7 @@ public class ScalingMatrix {
                                 }
                             }
 
-                            //check third weight in triplet
+                            //check third weight in quartet
                             if (wvi.getC() == 0.0) {
                                 if (wvj.getC() > 0.0) {
                                     this.perfectMatch = false;

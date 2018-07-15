@@ -20,6 +20,7 @@ import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.IdentifierList;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
+import uk.ac.uea.cmp.spectre.lasso.lasso.DistanceUpdater;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -37,7 +38,7 @@ public class LassoDistanceGraph extends FlexibleDistanceMatrix {
      */
     public LassoDistanceGraph(LassoDistanceGraph copy) {
         super(copy);
-        //Copy uk.ac.uea.cmp.spectre.lasso.Lasso specific elements
+        //Copy uk.ac.uea.cmp.spectre.lasso.lasso.Lasso specific elements
         //Copy identifier - cluster mapping
         identifierMap = new HashMap<>();
         distanceSupport = new HashMap<>();

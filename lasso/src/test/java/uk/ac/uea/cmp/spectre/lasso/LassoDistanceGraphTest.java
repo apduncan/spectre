@@ -23,7 +23,9 @@ import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.RandomDistanceGenerator;
 import uk.ac.uea.cmp.spectre.core.ds.tree.newick.NewickNode;
-import uk.ac.uea.cmp.spectre.lasso.*;
+import uk.ac.uea.cmp.spectre.lasso.lasso.DistanceUpdaterFactory;
+import uk.ac.uea.cmp.spectre.lasso.lasso.LassoOptions;
+import uk.ac.uea.cmp.spectre.lasso.lasso.ModalDistanceUpdater;
 
 import java.util.ArrayList;
 import java.util.HashSet;
