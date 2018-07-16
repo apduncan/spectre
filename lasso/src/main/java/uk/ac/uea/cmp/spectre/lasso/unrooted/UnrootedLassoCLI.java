@@ -55,7 +55,11 @@ public class UnrootedLassoCLI {
 
         //TODO: CommandLine uk.ac.uea.cmp.spectre.lasso.lasso.Lasso description
         CommandLine commandLine = new CommandLineHelper().startApp(createOptions(), "unrootedlasso [options] <distance_matrix_file>",
-                "Brief unrooted Lasso description here.\n" +
+                "Creates an unrooted tree from an input distance matrix which can contain missing distances. " +
+                        "Locate a triplet cover in the input distance, which is a subet of the data for which only " +
+                        "one topology and edge weighting for a tree exists. The output is a complete matrix, which " +
+                        "is a tree metric. A method such a neighbour joining can be used to create the tree " +
+                        "representation of this metric." +
                         "Input can be either nexus format file containing a distances block, or a phylip format distance matrix.", args);
 
         // If we didn't return a command line object then just return.  Probably the user requested help or

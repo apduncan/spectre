@@ -25,13 +25,17 @@ public class LassoOptions {
     final public static int DEFAULT_CLIQUE_ATTEMPTS = 10;
     final public static DistanceUpdaterFactory DEFAULT_DISTANCE_UPDATER = DistanceUpdaterFactory.MODAL;
     final public static CliqueFinderFactory DEFAULT_CLIQUE_FINDER = CliqueFinderFactory.HEURISTIC;
-    //TODO: Fill out parameter descriptions
-    final public static String DESC_INPUT = "Input help";
-    final public static String DESC_OUTPUT = "Output help";
-    final public static String DESC_LASSO_RUNS = "Runs help";
-    final public static String DESC_CLIQUE_ATTEMPTS = "Attempts help";
-    final public static String DESC_DISTANCE_UPDATER = "Updater help";
-    final public static String DESC_CLIQUE_FINDER = "Clique help";
+    final public static String DESC_INPUT = "A Nexus or Phylip formatted file containing a distance matrix. Missing" +
+            "values should be represented by ?.";
+    final public static String DESC_OUTPUT = "File to write constructed trees to. Output will be in Nexus format.";
+    final public static String DESC_LASSO_RUNS = "Number of times to run Lasso algorithm. The run which produces the " +
+            "tree containing the greatest number of taxa is used as the final result.";
+    final public static String DESC_CLIQUE_ATTEMPTS = "The number of times to attempt to find a maximal clique. Only " +
+            "relevant when using the heuristic clique finding method.";
+    final public static String DESC_DISTANCE_UPDATER = "Method of updating the distance matrix after joining clusters. " +
+            "Values: MODAL";
+    final public static String DESC_CLIQUE_FINDER = "Method of locating maximal cliques in graph. BRONKERBOSCH will " +
+            "find maximal clique but can be slower, HEURISTIC grows n cliques, and selects largest.";
 
     private int cliqueAttempts;
     private int lassoRuns;

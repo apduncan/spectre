@@ -64,9 +64,13 @@ public class LassoCLI {
     public static void main(String[] args) {
 
         //TODO: CommandLine uk.ac.uea.cmp.spectre.lasso.lasso.Lasso description
-        CommandLine commandLine = new CommandLineHelper().startApp(createOptions(), "netmake [options] <distance_matrix_file>",
-                "Brief Lasso description here.\n" +
-                        "Input can be either nexus format file containing a distances block, or a phylip format distance matrix.", args);
+        CommandLine commandLine = new CommandLineHelper().startApp(createOptions(),
+                "netmake [options] <distance_matrix_file>",
+                "Creates an equidistant tree from a distance matrix. The input matrix can have missing" +
+                        "values. The tree is created from a subset of the input distances, where this subset has only " +
+                        "one possible tree representation.\n" +
+                        "Input can be either nexus format file containing a distances block, or a phylip format " +
+                        "distance matrix.", args);
 
         // If we didn't return a command line object then just return.  Probably the user requested help or
         // input invalid args

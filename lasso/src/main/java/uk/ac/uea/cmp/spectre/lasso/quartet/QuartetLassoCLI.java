@@ -54,7 +54,10 @@ public class QuartetLassoCLI {
 
         //TODO: CommandLine uk.ac.uea.cmp.spectre.lasso.lasso.Lasso description
         CommandLine commandLine = new CommandLineHelper().startApp(createOptions(), "quartetlasso [options] <distance_matrix_file>",
-                "Brief quartet Lasso description here.\n" +
+                "Find all possible quartets in a distance matrix, which can contain missing values. " +
+                        "Any missing values which can be inferred are added to the matrix before quartets are " +
+                        "generated. Where a missing distance could have multiple values, the first one encountered " +
+                        "is selected.\n" +
                         "Input can be either nexus format file containing a distances block, or a phylip format distance matrix.", args);
 
         // If we didn't return a command line object then just return.  Probably the user requested help or
