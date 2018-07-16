@@ -13,7 +13,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.unrooted;
+package uk.ac.uea.cmp.spectre.lasso.quartet;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.OptionBuilder;
@@ -23,16 +23,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.uea.cmp.spectre.core.ui.cli.CommandLineHelper;
 import uk.ac.uea.cmp.spectre.core.util.LogConfig;
-import uk.ac.uea.cmp.spectre.lasso.lasso.LassoCLI;
 
 import java.io.File;
 import java.io.IOException;
 
-public class UnrootedLassoCLI {
-    private static Logger log = LoggerFactory.getLogger(UnrootedLassoCLI.class);
+public class QuartetLassoCLI {
+    private static Logger log = LoggerFactory.getLogger(QuartetLasso.class);
 
     public static final String OPT_OUTPUT = "output_file";
-    public static final String OPT_SEED_TREE= "seed_tree";
+    public static final String OPT_WEIGHTED = "weighted";
 
     public static Options createOptions() {
 
@@ -40,10 +39,10 @@ public class UnrootedLassoCLI {
         Options options = new Options();
 
         options.addOption(OptionBuilder.withArgName("output").withLongOpt(OPT_OUTPUT).hasArg()
-                .withDescription(UnrootedLassoOptions.DESC_OUTPUT).create("o"));
+                .withDescription(QuartetLassoOptions.DESC_OUTPUT).create("o"));
 
-        options.addOption(OptionBuilder.withArgName("seed").withLongOpt(OPT_SEED_TREE).hasArg()
-                .withDescription(UnrootedLassoOptions.DESC_SEED_TREE).create("t"));
+        options.addOption(OptionBuilder.withArgName("weight").withLongOpt(OPT_WEIGHTED).hasArg()
+                .withDescription(QuartetLassoOptions.DESC_WEIGHTED).create("w"));
 
         options.addOption(CommandLineHelper.HELP_OPTION);
 
@@ -54,8 +53,8 @@ public class UnrootedLassoCLI {
     public static void main(String[] args) {
 
         //TODO: CommandLine uk.ac.uea.cmp.spectre.lasso.lasso.Lasso description
-        CommandLine commandLine = new CommandLineHelper().startApp(createOptions(), "unrootedlasso [options] <distance_matrix_file>",
-                "Brief unrooted Lasso description here.\n" +
+        CommandLine commandLine = new CommandLineHelper().startApp(createOptions(), "quartetlasso [options] <distance_matrix_file>",
+                "Brief quartet Lasso description here.\n" +
                         "Input can be either nexus format file containing a distances block, or a phylip format distance matrix.", args);
 
         // If we didn't return a command line object then just return.  Probably the user requested help or
@@ -90,20 +89,20 @@ public class UnrootedLassoCLI {
             }
 
             File input = new File(commandLine.getArgs()[0]);
-            UnrootedLassoOptions options = new UnrootedLassoOptions();
+            QuartetLassoOptions options = new QuartetLassoOptions();
             //Set options
             options.setInput(input);
             options.setOutput(output);
-            if(commandLine.hasOption(OPT_SEED_TREE)) {
+            if(commandLine.hasOption(OPT_WEIGHTED)) {
                 try {
-                    ChordalSubgraphFinder.SEED_TREE.valueOf(commandLine.getOptionValue(OPT_SEED_TREE));
+                    options.setWeighted(Boolean.valueOf(commandLine.getOptionValue(OPT_WEIGHTED)));
                 } catch (Exception e) {
-                    throw new IOException("Invalid option for seed tree");
+                    throw new IOException("Invalid option for weight, should be true or false");
                 }
             }
 
             // Run Lasso
-            new UnrootedLasso(options).run();
+            new QuartetLasso(options).run();
 
         } catch (Exception e) {
             System.err.println(e.getMessage());

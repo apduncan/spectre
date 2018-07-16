@@ -17,6 +17,7 @@ package uk.ac.uea.cmp.spectre.lasso.lasso;import org.apache.commons.lang3.tuple.
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.IdentifierList;
 import uk.ac.uea.cmp.spectre.core.io.nexus.NexusWriter;
+import uk.ac.uea.cmp.spectre.lasso.LassoTree;
 
 import java.io.File;
 import java.io.IOException;
