@@ -45,7 +45,7 @@ public class ModalDistanceUpdaterTest {
         cluster.add(lg.getTaxa().get(1));
         cluster.add(lg.getTaxa().get(2));
         LassoTree clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL.get(new LassoOptions()));
-        //uk.ac.uea.cmp.spectre.lasso.Test the graph matrix equals the expected reduced matrix, after clustering {a, b, c}
+        //Test the graph matrix equals the expected reduced matrix, after clustering {a, b, c}
         matrix = lg.getMatrix();
         for(int i = 0; i < matrix.length; i++) {
             assertArrayEquals(reducedMatrix[i], matrix[i], 0.001);
@@ -53,7 +53,7 @@ public class ModalDistanceUpdaterTest {
         cluster.removeIf(v -> true);
         IntStream.range(0, 3).forEach(i -> cluster.add(lg.getTaxa().get(i)));
         clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL.get(new LassoOptions()));
-        //uk.ac.uea.cmp.spectre.lasso.Test the graph matrix equals the expected 2nd step reduction
+        //Test the graph matrix equals the expected 2nd step reduction
         matrix = lg.getMatrix();
         for(int i = 0; i < matrix.length; i++) {
             assertArrayEquals(step2[i], matrix[i], 0.001);
@@ -61,8 +61,7 @@ public class ModalDistanceUpdaterTest {
         cluster.removeIf(v -> true);
         IntStream.range(0, 2).forEach(i -> cluster.add(lg.getTaxa().get(i)));
         clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL.get(new LassoOptions()));
-        //uk.ac.uea.cmp.spectre.lasso.Test the graph has no remaining edges
+        //Test the graph has no remaining edges
         assertEquals(0, lg.getMap().size());
-        System.out.println(clustered);
     }
 }

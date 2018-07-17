@@ -89,13 +89,13 @@ public class LassoDistanceGraphTest {
         for(int i = 0; i < matrix.length; i++) {
             assertArrayEquals(reducedMatrix[i], postRetain[i], 0.001);
         }
-        //uk.ac.uea.cmp.spectre.lasso.Test that deleting non minimum edges in graph with all edges having equal weight works, does not delete all
+        //Test that deleting non minimum edges in graph with all edges having equal weight works, does not delete all
         //edges
         lg.retainMinEdges();
         for(int i = 0; i < matrix.length; i++) {
             assertArrayEquals(reducedMatrix[i], lg.getMatrix()[i], 0.001);
         }
-        //uk.ac.uea.cmp.spectre.lasso.Test that deleting non minimum edges in a graph with no edges does not cause an exception
+        //Test that deleting non minimum edges in a graph with no edges does not cause an exception
         lg.removeDistance(lg.getTaxa().getByName("A"), lg.getTaxa().getByName("B"));
         lg.removeDistance(lg.getTaxa().getByName("B"), lg.getTaxa().getByName("C"));
         exception.expect(IllegalStateException.class);
@@ -117,7 +117,7 @@ public class LassoDistanceGraphTest {
         Set<Identifier> cluster = new HashSet<>();
         cluster.add(this.graph.getTaxa().get(0));
         cluster.add(this.graph.getTaxa().get(1));
-        //uk.ac.uea.cmp.spectre.lasso.Test a vertex which should be a cluster rather than a taxon
+        //Test a vertex which should be a cluster rather than a taxon
         LassoTree joined = this.graph.joinCluster(new ArrayList<>(cluster), new ModalDistanceUpdater(new LassoOptions()));
         assertFalse(this.graph.isTaxon(joined.getTaxon()));
     }
@@ -145,13 +145,11 @@ public class LassoDistanceGraphTest {
             assertEquals(1, child.getLength(), 0.001);
         }
         LassoTree noInternal = new LassoTree(clustered);
-        System.out.println(clustered);
         noInternal.removeInternalIdentifier();
         //Check tree is expected tree
         String[] validNewicks = {"(C:1.0,B:1.0,A:1.0):0.0", "(C:1.0,A:1.0,B:1.0):0.0", "(A:1.0,B:1.0,C:1.0):0.0", "(A:1.0,C:1.0,B:1.0):0.0"
                 , "(B:1.0,C:1.0,A:1.0):0.0", "(B:1.0,A:1.0,C:1.0):0.0"};
         Boolean validTopo = Stream.of(validNewicks).filter(s -> noInternal.toString().equals(s)).count() > 0;
-        System.out.println(noInternal.toString());
         assertTrue(validTopo);
         //Check graph has expected matrix
         for (int i = 0; i < expectedUpdate.length; i++) {
@@ -179,7 +177,6 @@ public class LassoDistanceGraphTest {
         assertEquals(1, lg.getTaxa().size(), 0.001);
         expected.add(cd);
         assertTrue(lg.getDistancesUsed().containsAll(expected) && lg.getDistancesUsed().size() == expected.size());
-        System.out.println(clustered);
     }
 
     @Test
@@ -187,10 +184,13 @@ public class LassoDistanceGraphTest {
         double[][] matrix = new double[][] { {0, 2, 3, 0}, {2, 0, 2, 4}, {3, 2, 0, 0}, {0, 4, 0, 0} };
         double[][] oneWeight = new double[][]{{0, 4}, {4, 0}};
         LassoDistanceGraph lg = new LassoDistanceGraph(new FlexibleDistanceMatrix(matrix));
+        //Should return 2, not 0
         assertEquals(lg.getMinEdgeWeight(), 2, 0.001);
         lg = new LassoDistanceGraph(new FlexibleDistanceMatrix(oneWeight));
+        //Should return 4, not 0, should be able to cope with a graph with only one value for edge weights
         assertEquals(lg.getMinEdgeWeight(), 4, 0.001);
         lg.removeDistance(lg.getTaxa().get(0), lg.getTaxa().get(1));
+        //Should error when no distances exist in the graph
         exception.expect(IllegalStateException.class);
         lg.getMinEdgeWeight();
     }
@@ -230,7 +230,5 @@ public class LassoDistanceGraphTest {
         assertEquals(1, components.get(0).getMap().size());
         assertEquals(2, components.get(1).getMap().size());
         assertEquals(components.get(1).getDistance("D", "E"), 0, 0.01);
-//        LassoDistanceGraph big = new LassoDistanceGraph(new RandomDistanceGenerator().generateDistances(300));
-//        components = big.getConnectedComponents();
     }
 }

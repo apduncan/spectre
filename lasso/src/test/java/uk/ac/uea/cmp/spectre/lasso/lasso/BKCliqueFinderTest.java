@@ -13,21 +13,20 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;import org.junit.Before;
+package uk.ac.uea.cmp.spectre.lasso.lasso;
+
+import org.junit.Before;
 import org.junit.Test;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
 import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
-import uk.ac.uea.cmp.spectre.lasso.lasso.CliqueFinder;
-import uk.ac.uea.cmp.spectre.lasso.lasso.CliqueFinderFactory;
-import uk.ac.uea.cmp.spectre.lasso.lasso.LassoOptions;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.Assert.*;
 
-public class HeuristicCliqueFinderTest {
+public class BKCliqueFinderTest {
     private LassoDistanceGraph simpleGraph;
     private LassoDistanceGraph singleValidClique;
 
@@ -41,7 +40,7 @@ public class HeuristicCliqueFinderTest {
 
     @Test
     public void find() {
-        CliqueFinder heuristic = CliqueFinderFactory.HEURISTIC.get(new LassoOptions());
+         CliqueFinder heuristic = CliqueFinderFactory.HEURISTIC.get(new LassoOptions());
         Set<Identifier> expected = new HashSet<>();
         for(int i = 0; i < 3; i++) {
             expected.add(this.simpleGraph.getTaxa().get(i));

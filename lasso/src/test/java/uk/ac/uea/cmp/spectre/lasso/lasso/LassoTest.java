@@ -35,7 +35,7 @@ public class LassoTest {
     @Before
     public void setup() {
         BasicConfigurator.configure();
-        LogManager.getRootLogger().setLevel(Level.INFO);
+        LogManager.getRootLogger().setLevel(Level.FATAL);
     }
 
     @Rule
@@ -43,7 +43,7 @@ public class LassoTest {
 
     @Test
     public void run1() throws IOException {
-        //uk.ac.uea.cmp.spectre.lasso.Test lasso with adapted worked example from paper, so only a single output tree is possible
+        //Test lasso with adapted worked example from paper, so only a single output tree is possible
         File input = FileUtils.toFile(LassoTest.class.getResource("/example-mod.nex"));
         File output = new File(folder.getRoot(), "output.nex");
         LassoOptions options = new LassoOptions();
@@ -67,7 +67,7 @@ public class LassoTest {
                 "TREE tree1 = (((C:1.0,D:1.0,B:1.0):1.0,A:2.0):1.0,E:3.0):0.0;"
         };
         //Trim whitespace from outputlines
-        outputLines = outputLines.stream().peek(System.out::println).map(String::trim).collect(Collectors.toList());
+        outputLines = outputLines.stream().map(String::trim).collect(Collectors.toList());
         //Check strong lasso matches what is expected
         long matched = Stream.of(expectedLasso).filter(outputLines::contains).count();
         assertEquals(expectedLasso.length, matched);
@@ -78,7 +78,7 @@ public class LassoTest {
 
     @Test
     public void run2() throws IOException {
-        //uk.ac.uea.cmp.spectre.lasso.Test lasso when two disconnected components exist in the input
+        //Test lasso when two disconnected components exist in the input
         File input = FileUtils.toFile(LassoTest.class.getResource("/disconnected.nex"));
         File output = new File(folder.getRoot(), "output.nex");
         LassoOptions options = new LassoOptions();
@@ -89,7 +89,6 @@ public class LassoTest {
         //Check that the output file exists
         assertTrue(output.exists());
         List<String> outputLines = FileUtils.readLines(output, "UTF-8");
-        outputLines.forEach(System.out::println);
         //Check file is not empty
         assertTrue(!outputLines.isEmpty());
         //Check strong lasso is as expected
@@ -110,6 +109,15 @@ public class LassoTest {
         //Check tree is isomorphically equivalent to what is expected
         Optional<String> matchedTree = Stream.of(expectedNewicks).filter(outputLines::contains).findFirst();
         assertTrue(matchedTree.isPresent());
+        //Check the same for tree containing A, B
+        String[] expectedLasso2 = { "[A -> B, 1.0]" };
+        String[] expectedNewicks2 = { "TREE tree2 = (A:0.5,B:0.5):0.0;", "TREE tree2 = (B:0.5,A:0.5):0.0;" };
+        //Check strong lasso matches what is expected
+        matched = Stream.of(expectedLasso2).filter(outputLines::contains).count();
+        assertEquals(expectedLasso2.length, matched);
+        //Check tree isomorphically equivalent to what is expected
+        Optional<String> matchedTree2 = Stream.of(expectedNewicks2).filter(outputLines::contains).findFirst();
+        assertTrue(matchedTree2.isPresent());
     }
 
     @Test
@@ -120,7 +128,7 @@ public class LassoTest {
         LassoOptions options = new LassoOptions();
         options.setInput(input);
         options.setOutput(output);
-        options.setCliqueFinder(CliqueFinderFactory.HEURISTIC);
+        options.setCliqueFinder(CliqueFinderFactory.BRONKERBOSCH);
         Lasso lasso = new Lasso(options);
         lasso.run();
         //Check that the output file exists
@@ -139,7 +147,7 @@ public class LassoTest {
                 "TREE tree1 = (((C:1.0,D:1.0,B:1.0):1.0,A:2.0):1.0,E:3.0):0.0;"
         };
         //Trim whitespace from outputlines
-        outputLines = outputLines.stream().peek(System.out::println).map(String::trim).collect(Collectors.toList());
+        outputLines = outputLines.stream().map(String::trim).collect(Collectors.toList());
         //Check strong lasso matches what is expected
         long matched = Stream.of(expectedLasso).filter(outputLines::contains).count();
         assertEquals(expectedLasso.length, matched);

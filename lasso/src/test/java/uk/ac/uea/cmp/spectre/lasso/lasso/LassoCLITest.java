@@ -15,6 +15,9 @@
 
 package uk.ac.uea.cmp.spectre.lasso.lasso;
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -26,12 +29,17 @@ import java.io.IOException;
 import static org.junit.Assert.*;
 
 public class LassoCLITest {
-
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
+
+    @Before
+    public void before() {
+         Logger.getLogger(LassoCLI.class.getName()).setLevel(Level.FATAL);
+         Logger.getLogger(Lasso.class.getName()).setLevel(Level.FATAL);
+    }
 
     //@Test
     public void testTree1() throws IOException {
@@ -43,6 +51,7 @@ public class LassoCLITest {
 
         LassoCLI.main(new String[]{
                 "-o", outputFile.getAbsolutePath(),
+                "-r", "1",
                 testFile1.getAbsolutePath()
         });
 
@@ -72,7 +81,7 @@ public class LassoCLITest {
 
     //@Test
     public void testTree5() throws IOException {
-        //uk.ac.uea.cmp.spectre.lasso.Test with more complex options
+        //Test with more complex options
         File outputDir = temporaryFolder.getRoot();
         File outputFile = new File(outputDir.getAbsolutePath() + "output.nex");
 
@@ -87,7 +96,7 @@ public class LassoCLITest {
         assertTrue(FileUtils.readLines(outputFile, "UTF-8").size() > 0);
     }
 
-    //@uk.ac.uea.cmp.spectre.lasso.Test
+    //@Test
     public void testTree3() throws IOException {
         //Run with invalid args
         File outputDir = temporaryFolder.getRoot();
@@ -108,7 +117,7 @@ public class LassoCLITest {
         assertTrue(FileUtils.readLines(outputFile, "UTF-8").size() > 0);
     }
 
-    //@uk.ac.uea.cmp.spectre.lasso.Test
+    //@Test
     public void testTree4() throws IOException {
         //Run with missing input file
         File outputDir = temporaryFolder.getRoot();

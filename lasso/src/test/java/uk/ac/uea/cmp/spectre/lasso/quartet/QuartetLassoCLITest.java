@@ -13,7 +13,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.unrooted;
+package uk.ac.uea.cmp.spectre.lasso.quartet;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Level;
@@ -23,17 +23,18 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
-import uk.ac.uea.cmp.spectre.core.ds.Identifier;
-import uk.ac.uea.cmp.spectre.core.io.nexus.Nexus;
-import uk.ac.uea.cmp.spectre.core.io.nexus.NexusReader;
+import uk.ac.uea.cmp.spectre.lasso.lasso.LassoCLI;
+import uk.ac.uea.cmp.spectre.lasso.lasso.LassoCLITest;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 
-public class UnrootedLassoCLITest {
+public class QuartetLassoCLITest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -42,32 +43,34 @@ public class UnrootedLassoCLITest {
 
     @Before
     public void before() {
-        Logger.getLogger(UnrootedLasso.class.getName()).setLevel(Level.FATAL);
-        Logger.getLogger(UnrootedLassoCLI.class.getName()).setLevel(Level.FATAL);
+        Logger.getLogger(QuartetLasso.class.getName()).setLevel(Level.FATAL);
     }
 
     @Test
-    public void runCLI() throws IOException {
-        //uk.ac.uea.cmp.spectre.lasso.Test with more complex options
+    public void main() throws IOException {
         File outputDir = temporaryFolder.getRoot();
+
         File outputFile = new File(outputDir.getAbsolutePath() + "output.nex");
 
-        File testFile1 = FileUtils.toFile(UnrootedLassoCLITest.class.getResource("/ex-additive-diamonds.nex"));
+        File testFile1 = FileUtils.toFile(LassoCLITest.class.getResource("/ex-additive-diamonds.nex"));
 
-        UnrootedLassoCLI.main(new String[]{
+        QuartetLassoCLI.main(new String[]{
                 "-o", outputFile.getAbsolutePath(),
+                "-w", "true",
                 testFile1.getAbsolutePath()
         });
 
         assertTrue(outputFile.exists());
-        assertTrue(FileUtils.readLines(outputFile, "UTF-8").size() > 0);
-        Nexus fileContents = new NexusReader().parse(outputFile);
-        //Compare matrix to expected
-        final double[][] expected = {{0, 3, 8, 15, 16}, {3, 0, 9, 16, 17}, {8, 9, 0, 15, 16}, {15, 16, 15, 0, 13},
-                {16, 17, 16, 13, 0}};
-        final double[][] derived = fileContents.getDistanceMatrix().getMatrix(Comparator.comparing(Identifier::getName));
-        for(int i = 0; i < expected.length; i++) {
-            assertArrayEquals(expected[i], derived[i], 0.01);
-        }
+        //Check it is not empty
+        final List<String> outputLines = FileUtils.readLines(outputFile, "UTF-8").stream().map(String::trim).collect(Collectors.toList());
+        //Check file is not empty
+        assertTrue(!outputLines.isEmpty());
+        //Trim whitespace from lines
+        //Check all the expected quartets exist
+        String[] expectedQuartets = {"1 2 : 3 4", "2 3 : 4 5", "1 2 : 4 5", "1 2 : 3 5", "1 2 : 4 5"};
+        long countFound = Stream.of(expectedQuartets).filter(quart -> {
+            return outputLines.stream().filter(line -> line.contains(quart)).count() > 0;
+        }).count();
+        assertEquals(expectedQuartets.length, countFound);
     }
 }

@@ -13,11 +13,16 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.quartet;
+package uk.ac.uea.cmp.spectre.lasso;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.math3.util.CombinatoricsUtils;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.junit.Before;
 import org.junit.Test;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
@@ -36,34 +41,42 @@ import uk.ac.uea.cmp.spectre.lasso.unrooted.TripletCoverFinder;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
 public class LassoQuartetsTest {
+    @Before
+    public void setup() {
+        BasicConfigurator.configure();
+        LogManager.getRootLogger().setLevel(Level.FATAL);
+    }
 
     @Test
-    public void enrichMatrix() {
+    public void altEnrichMatrix() {
+        //Test ability to infer correctly in an incomplete matrix, which does contain diamonds
         double[][] matrix = { {0, 3, 8, 0}, {3, 0, 9, 10}, {8, 9, 0, 9}, {0, 10, 9, 0} };
         DistanceMatrix dm = new FlexibleDistanceMatrix(matrix);
         LassoQuartets lq = new LassoQuartets(dm);
         dm = lq.altEnrichMatrix();
-        //distance between a and d should be set to 9
+        //distance between a and d should be set to 9, can be inferred from diamond
         assertEquals(dm.getDistance("A", "D"), 9, 0.01);
 
         //Test if it can convert a system of 3 triangles on 5 taxa to a complete graph
         //Has 3 missing distance rather than 1
-        double[][] pentMatrix = { {0, 3, 8, 0, 0}, {3, 0, 9, 16, 0}, {8, 9, 0, 15, 16}, {0, 16, 15, 0, 13}, {0, 0, 16, 13, 0} };
+        double[][] pentMatrix = { {0, 3, 8, 0, 0}, {3, 0, 9, 16, 0}, {8, 9, 0, 15, 16}, {0, 16, 15, 0, 13},
+                {0, 0, 16, 13, 0} };
         DistanceMatrix pentDm = new FlexibleDistanceMatrix(pentMatrix);
         lq = new LassoQuartets(pentDm);
+        //Check missing distances correctly inferrred
         pentDm = lq.altEnrichMatrix();
         assertEquals(pentDm.getDistance("A", "D"), 15,0.01);
         assertEquals(pentDm.getDistance("A", "E"), 16, 0.01);
         assertEquals(pentDm.getDistance("B", "E"), 17, 0.01);
     }
 
-    @Test
+    //@Test
     public void timeComparison() {
+        //Used to compare runtime of alt and standard enrich methods
         DistanceMatrix dm = new RandomDistanceGenerator().generateDistances(40);
         List<Pair<Identifier, Identifier>> pairs = new ArrayList<>(dm.getMap().keySet());
         Collections.shuffle(pairs);
@@ -75,13 +88,13 @@ public class LassoQuartetsTest {
         }
         LassoQuartets lq = new LassoQuartets(dm);
         StopWatch timer = new StopWatch();
-//        System.out.println("Begin standard enriching");
-//        timer.start();
-//        lq.enrichMatrix();
-//        System.out.println("Finished enriching standard");
-//        timer.stop();
-//        System.out.println("Time: " + timer.getTime());
-//        timer.reset();
+        System.out.println("Begin standard enriching");
+        timer.start();
+        lq.enrichMatrix();
+        System.out.println("Finished enriching standard");
+        timer.stop();
+        System.out.println("Time: " + timer.getTime());
+        timer.reset();
         lq = new LassoQuartets(dm);
         timer.start();
         lq.altEnrichMatrix();
@@ -89,15 +102,15 @@ public class LassoQuartetsTest {
         System.out.println("Finished enriching alternate");
         System.out.println("Time: " + timer.getTime());
 
-//        QuartetSystem quartets = lq.getQuartets();
+        QuartetSystem quartets = lq.getQuartets(true);
         StringBuilder sb = lq.getQuartetsAsString(true);
         NexusWriter writer = new NexusWriter();
         writer.appendHeader();
         writer.appendLine();
-//        writer.append(quartets.getTaxa());
+        writer.append(quartets.getTaxa());
         writer.append(lq.getMatrix().getTaxa());
         writer.appendLine();
-//        writer.append(quartets, false);
+        writer.append(quartets, false);
         writer.append(sb.toString());
         try {
             writer.write(new File("/home/hal/test-quartet.nex"));
@@ -117,38 +130,13 @@ public class LassoQuartetsTest {
             LassoQuartets lq = new LassoQuartets(lg);
             FlexibleDistanceMatrix dm = new FlexibleDistanceMatrix(lq.altEnrichMatrix());
             QuartetSystem quartets = lq.getQuartets(true);
-            //now original method
-            LassoDistanceGraph lg2 = new LassoDistanceGraph(original);
-            LassoQuartets lq2 = new LassoQuartets(lg2);
-            FlexibleDistanceMatrix dm2 = new FlexibleDistanceMatrix(lq2.enrichMatrix());
-            QuartetSystem quartets2 = lq2.getQuartets(true);
-            //output edges which are not equal, and whether they existed in the original matrix
-            Set<Pair<Identifier, Identifier>> edges = dm.getMap().entrySet().stream().filter(e -> e.getValue() > 0)
-                    .map(e -> e.getKey()).collect(Collectors.toSet());
-            edges.addAll(dm2.getMap().entrySet().stream().filter(e-> e.getValue() > 0).map(e -> e.getKey()).collect(Collectors.toSet()));
-            edges.stream().forEach(e -> {
-                boolean notPresent = false;
-                if(!(dm2.getMap().containsKey(e))) {
-                    System.out.println("Edge " + e.toString() + " weight " + dm.getMap().get(e) + " not in dm2");
-                    notPresent = true;
-                }
-                if(!(dm.getMap().containsKey(e))) {
-                    System.out.println("Edge " + e.toString() + " weight " + dm2.getMap().get(e) + " not in dm1");
-                    notPresent = true;
-                }
-                if(!notPresent) {
-                    //Check distance equal
-                    if(dm.getDistance(e.getLeft(), e.getRight()) != dm2.getDistance(e.getLeft(), e.getRight())) {
-                        System.out.println(e.toString() + " not equal length");
-                    }
-                }
-            });
+            //try to output
             NexusWriter writer = new NexusWriter();
             writer.appendHeader();
             writer.appendLine();
-            writer.append(quartets2.getTaxa());
+            writer.append(quartets.getTaxa());
             writer.appendLine();
-            writer.append(quartets2, true);
+            writer.append(quartets, true);
             writer.write(output);
         } catch (IOException e) {
             System.out.println("Error reading nexus file");
@@ -164,23 +152,12 @@ public class LassoQuartetsTest {
         LassoQuartets lq = new LassoQuartets(pentDm);
         lq.enrichMatrix();
         QuartetSystem quartets = lq.getQuartets(true);
-        System.out.println(quartets);
-    }
-
-    @Test
-    public void randomDeletions() {
-        DistanceMatrix dm = new RandomDistanceGenerator().generateDistances(100);
-        List<Pair<Identifier, Identifier>> pairs = new ArrayList<>(dm.getMap().keySet());
-        Collections.shuffle(pairs);
-        //delete 20
-        for(int i = 0; i < 20; i++) {
-            dm.setDistance(pairs.get(i).getLeft(), pairs.get(i).getRight(), 0);
-        }
-        LassoQuartets lq = new LassoQuartets(dm);
-        lq.altEnrichMatrix();
-        System.out.println("Finished enriching");
-        QuartetSystem quartets = lq.getQuartets(true);
-        System.out.println(quartets);
+        //Test that matrix is complete
+        assertEquals((pentMatrix.length * (pentMatrix.length -1)) * 0.5,
+                lq.getMatrix().getMap().entrySet().stream().filter(e -> e.getValue() > 0).count(), 0.01);
+        //Test that correct number of quartets
+        long expectedCombos = CombinatoricsUtils.factorial(pentMatrix.length) / (CombinatoricsUtils.factorial(4) * CombinatoricsUtils.factorial(pentMatrix.length - 4));
+        assertEquals(expectedCombos, quartets.getQuartets().size());
     }
 
     @Test
@@ -205,46 +182,19 @@ public class LassoQuartetsTest {
             assertArrayEquals(additiveMatrix[i], derived[i], 0.001);
         }
         //Output to see if splitstree constructs correct tree
-        File output = new File("/home/hal/additive.nex");
-        File outputQuartets = new File("/home/hal/additive-quartet.nex");
-        NexusWriter writer = new NexusWriter();
-        NexusWriter writerQuartets = new NexusWriter();
-        LassoQuartets quarters = new LassoQuartets(complete);
-        try {
-            writer.writeDistanceMatrix(output, complete);
-            writerQuartets.appendHeader();
-            writerQuartets.append(complete.getTaxa().sortById());
-            writerQuartets.append(quarters.getQuartetsAsString(true));
-            writerQuartets.write(outputQuartets);
-        } catch (IOException error) {
-
-        }
-    }
-
-    @Test
-    public void lassoYeast() {
-        File input = FileUtils.toFile(LassoTest.class.getResource("/paradoxus-part-question.nex"));
-        File output = new File("/home/hal/quartet-yeast.nex");
-        try {
-            Nexus nexus = new NexusReader().parse(input);
-            LassoDistanceGraph lg = new LassoDistanceGraph(new FlexibleDistanceMatrix(nexus.getDistanceMatrix()));
-            LassoDistanceGraph original = new LassoDistanceGraph(lg);
-            //Get a chordal subgraph
-            DistanceMatrix chordal = new ChordalSubgraphFinder(original).find();
-            //Get quartet covers
-            List<LassoDistanceGraph> covers = new TripletCoverFinder(new LassoDistanceGraph(chordal)).findTripletCovers(ChordalSubgraphFinder.SEED_TREE.DEPTH);
-            //Get a full matrix from this cover
-            DistanceMatrix complete = new LassoQuartets(covers.get(0)).altEnrichMatrix();
-            //Test this has the expect number of edges
-            int completeEdges = (complete.getTaxa().size() * (complete.getTaxa().size() - 1))/2;
-            assertEquals(completeEdges, complete.getMap().entrySet().stream().filter(e -> e.getValue() > 0).count(), 0.001);
-            //Write
-            NexusWriter writer = new NexusWriter();
-            writer.appendHeader();
-            writer.writeDistanceMatrix(output, complete);
-        } catch (IOException err) {
-
-        }
-
+//        File output = new File("/home/hal/additive.nex");
+//        File outputQuartets = new File("/home/hal/additive-quartet.nex");
+//        NexusWriter writer = new NexusWriter();
+//        NexusWriter writerQuartets = new NexusWriter();
+//        LassoQuartets quarters = new LassoQuartets(complete);
+//        try {
+//            writer.writeDistanceMatrix(output, complete);
+//            writerQuartets.appendHeader();
+//            writerQuartets.append(complete.getTaxa().sortById());
+//            writerQuartets.append(quarters.getQuartetsAsString(true));
+//            writerQuartets.write(outputQuartets);
+//        } catch (IOException error) {
+//
+//        }
     }
 }

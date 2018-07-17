@@ -15,10 +15,12 @@
 
 package uk.ac.uea.cmp.spectre.lasso.unrooted;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,22 +28,24 @@ import org.junit.rules.TemporaryFolder;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.RandomDistanceGenerator;
+import uk.ac.uea.cmp.spectre.core.io.nexus.Nexus;
+import uk.ac.uea.cmp.spectre.core.io.nexus.NexusReader;
 import uk.ac.uea.cmp.spectre.core.io.nexus.NexusWriter;
-import uk.ac.uea.cmp.spectre.lasso.unrooted.ChordalSubgraphFinder;
-import uk.ac.uea.cmp.spectre.lasso.unrooted.UnrootedLasso;
-import uk.ac.uea.cmp.spectre.lasso.unrooted.UnrootedLassoOptions;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.junit.Assert.*;
 
 public class UnrootedLassoTest {
     @Before
     public void setup() {
-        BasicConfigurator.configure();
-        LogManager.getRootLogger().setLevel(Level.INFO);
+        Logger.getLogger(UnrootedLasso.class.getName()).setLevel(Level.FATAL);
     }
 
     @Rule
@@ -50,9 +54,9 @@ public class UnrootedLassoTest {
     @Test
     public void run() throws IOException {
         //Create a random matrix
-        DistanceMatrix matrix = new RandomDistanceGenerator().generateDistances(90);
+        DistanceMatrix matrix = new RandomDistanceGenerator().generateDistances(30);
         //Delete random 20%
-        matrix = deleteRandom(matrix, 90);
+        matrix = deleteRandom(matrix, 20);
         //Save out
         File input = folder.newFile("random.nex");
         File output = folder.newFile("output.nex");
@@ -62,6 +66,35 @@ public class UnrootedLassoTest {
         UnrootedLassoOptions options = new UnrootedLassoOptions(input, output, ChordalSubgraphFinder.SEED_TREE.DEPTH);
         UnrootedLasso lasso = new UnrootedLasso(options);
         lasso.run();
+        //Check output file exists
+        assertTrue(output.exists());
+        //Check it is not empty
+        List<String> outputLines = FileUtils.readLines(output, "UTF-8");
+        assertTrue(outputLines.size() > 0);
+    }
+
+    @Test
+    public void run_additive() throws IOException {
+        File input = FileUtils.toFile(UnrootedLassoTest.class.getResource("/ex-additive-diamonds.nex"));
+        File output = folder.newFile("output_additive.nex");
+        UnrootedLassoOptions options = new UnrootedLassoOptions(input, output);
+        UnrootedLasso lasso = new UnrootedLasso(options);
+        lasso.run();
+        //Check output file exists
+        assertTrue(output.exists());
+        //Check not empty
+        List<String> outLines = FileUtils.readLines(output, "UTF-8");
+        assertTrue(outLines.size() > 0);
+        //Check this does contain the full tree metric
+        //Load matrix
+        Nexus fileContents = new NexusReader().parse(output);
+        //Compare matrix to expected
+        final double[][] expected = {{0, 3, 8, 15, 16}, {3, 0, 9, 16, 17}, {8, 9, 0, 15, 16}, {15, 16, 15, 0, 13},
+                {16, 17, 16, 13, 0}};
+        final double[][] derived = fileContents.getDistanceMatrix().getMatrix(Comparator.comparing(Identifier::getName));
+        for(int i = 0; i < expected.length; i++) {
+            assertArrayEquals(expected[i], derived[i], 0.01);
+        }
     }
 
     private DistanceMatrix deleteRandom(DistanceMatrix matrix, int percent) {

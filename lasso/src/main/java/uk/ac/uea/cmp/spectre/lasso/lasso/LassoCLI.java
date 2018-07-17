@@ -63,7 +63,6 @@ public class LassoCLI {
 
     public static void main(String[] args) {
 
-        //TODO: CommandLine uk.ac.uea.cmp.spectre.lasso.lasso.Lasso description
         CommandLine commandLine = new CommandLineHelper().startApp(createOptions(),
                 "netmake [options] <distance_matrix_file>",
                 "Creates an equidistant tree from a distance matrix. The input matrix can have missing" +
@@ -81,7 +80,6 @@ public class LassoCLI {
         try {
 
             LogConfig.defaultConfig();
-
             log.info("Parsing arguments");
 
             if (commandLine.getArgs().length == 0) {
