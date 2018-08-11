@@ -25,6 +25,7 @@ import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class ChordalSubgraphFinder {
     private LassoDistanceGraph graph;
@@ -120,6 +121,9 @@ public class ChordalSubgraphFinder {
                 Double dvy = graph.getDistance(v, y);
                 Double dux = graph.getDistance(u, x);
                 if(duv + dxy == dvy + dux)
+                    return false;
+                //Needs to resolve to a distance > 0
+                if((Math.max(duv + dxy, dvy + dux) - graph.getDistance(u,y)) == 0)
                     return false;
             }
         }

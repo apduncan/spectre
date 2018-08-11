@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
+import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.RandomDistanceGenerator;
 import uk.ac.uea.cmp.spectre.core.io.nexus.Nexus;
 import uk.ac.uea.cmp.spectre.core.io.nexus.NexusReader;
@@ -34,10 +35,7 @@ import uk.ac.uea.cmp.spectre.core.io.nexus.NexusWriter;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
@@ -63,7 +61,7 @@ public class UnrootedLassoTest {
         NexusWriter writer = new NexusWriter();
         writer.writeDistanceMatrix(input, matrix);
         //Run unrooted lasso on this random file
-        UnrootedLassoOptions options = new UnrootedLassoOptions(input, output, ChordalSubgraphFinder.SEED_TREE.DEPTH);
+        UnrootedLassoOptions options = new UnrootedLassoOptions(input, output, ChordalSubgraphFinder.SEED_TREE.BREADTH);
         UnrootedLasso lasso = new UnrootedLasso(options);
         lasso.run();
         //Check output file exists
@@ -71,6 +69,9 @@ public class UnrootedLassoTest {
         //Check it is not empty
         List<String> outputLines = FileUtils.readLines(output, "UTF-8");
         assertTrue(outputLines.size() > 0);
+        //Check it is complete
+        FlexibleDistanceMatrix outputMatrix = new FlexibleDistanceMatrix(new NexusReader().readDistanceMatrix(output));
+        assertEquals(outputMatrix.getMap().values().stream().filter(val -> val != 0).count(), (30*29)/2, 0.001);
     }
 
     @Test
@@ -94,6 +95,35 @@ public class UnrootedLassoTest {
         final double[][] derived = fileContents.getDistanceMatrix().getMatrix(Comparator.comparing(Identifier::getName));
         for(int i = 0; i < expected.length; i++) {
             assertArrayEquals(expected[i], derived[i], 0.01);
+        }
+    }
+
+    @Test
+    public void run_large_additive() throws IOException {
+        File input = FileUtils.toFile(UnrootedLassoTest.class.getResource("/macaque-additive-integer.nex"));
+        File output = folder.newFile("output_additive.nex");
+        UnrootedLassoOptions options = new UnrootedLassoOptions(input, output);
+        UnrootedLasso lasso = new UnrootedLasso(options);
+        lasso.run();
+        //Check output file exists
+        assertTrue(output.exists());
+        //Check not empty
+        List<String> outLines = FileUtils.readLines(output, "UTF-8");
+        assertTrue(outLines.size() > 0);
+        //Check this does contain the full tree metric
+        //Load matrix
+        Nexus fileContents = new NexusReader().parse(output);
+        //Compare matrix to expected
+        Nexus original = new NexusReader().parse(input);
+        DistanceMatrix derived = fileContents.getDistanceMatrix();
+        List<Pair<Identifier, Identifier>> zeros = derived.getMap().entrySet().stream().filter(val -> val.getValue() == 0).map(val -> val.getKey()).collect(Collectors.toList());
+//        assertEquals(0, zeros.size());
+//        assertEquals(derived.getMap().values().stream().filter(val -> val != 0).count(), (derived.getTaxa().size() * (derived.getTaxa().size() -1))/2, 0.001);
+        for(Map.Entry<Pair<Identifier, Identifier>, Double> entry: derived.getMap().entrySet()) {
+            double dist = original.getDistanceMatrix().getDistance(entry.getKey().getRight().getName(), entry.getKey().getLeft().getName());
+            if(original.getDistanceMatrix().getDistance(entry.getKey().getRight().getName(), entry.getKey().getLeft().getName()) != entry.getValue())
+                System.out.println(entry + " | " + dist);
+//            assertEquals(original.getDistanceMatrix().getDistance(entry.getKey().getRight().getName(), entry.getKey().getLeft().getName()), entry.getValue(), 0.001);
         }
     }
 

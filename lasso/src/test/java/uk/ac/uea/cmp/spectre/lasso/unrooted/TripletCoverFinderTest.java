@@ -15,18 +15,29 @@
 
 package uk.ac.uea.cmp.spectre.lasso.unrooted;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Rule;
 import org.junit.Test;
 import static org.junit.Assert.*;
+
+import org.junit.rules.TemporaryFolder;
+import uk.ac.uea.cmp.spectre.core.ds.Identifier;
+import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
+import uk.ac.uea.cmp.spectre.core.io.nexus.Nexus;
+import uk.ac.uea.cmp.spectre.core.io.nexus.NexusReader;
 import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 public class TripletCoverFinderTest {
+
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
     public void findTripletCovers() {
@@ -80,5 +91,38 @@ public class TripletCoverFinderTest {
                 assertArrayEquals(pair.getRight()[i], derived[i], 0.01);
             }
         }
+   }
+
+      @Test
+   public void cover_dist_match() throws IOException {
+          File input = FileUtils.toFile(UnrootedLassoTest.class.getResource("/large-additive.nex"));
+          DistanceMatrix dm = new NexusReader().readDistanceMatrix(input);
+          //Compare matrix to expected
+          List<LassoDistanceGraph> coverList = new TripletCoverFinder(new LassoDistanceGraph(dm)).findTripletCovers(ChordalSubgraphFinder.SEED_TREE.BREADTH);
+          for (LassoDistanceGraph cover : coverList) {
+              for (Map.Entry<Pair<Identifier, Identifier>, Double> entry : cover.getMap().entrySet()) {
+                  Double dist = dm.getDistance(entry.getKey().getRight().getName(), entry.getKey().getLeft().getName());
+                  assertEquals(dist, entry.getValue(), 0.001);
+              }
+          }
+   }
+
+   @Test
+   public void diamonds_only() throws IOException {
+          File input = FileUtils.toFile(UnrootedLassoTest.class.getResource("/macaque-additive-integer.nex"));
+          DistanceMatrix dm = new NexusReader().readDistanceMatrix(input);
+          //Compare matrix to expected
+          List<LassoDistanceGraph> coverList = new TripletCoverFinder(new LassoDistanceGraph(dm)).findTripletCovers(ChordalSubgraphFinder.SEED_TREE.BREADTH);
+          for (LassoDistanceGraph cover : coverList) {
+              for (Map.Entry<Pair<Identifier, Identifier>, Double> entry : cover.getMap().entrySet()) {
+                  assertNotEquals(0, entry.getValue(),0.00000000000000000000000000000001);
+              }
+              for(Pair<Identifier, Identifier> edge: cover.getMap().keySet()) {
+                  Set<Identifier> neighbours = cover.getNeighbours(edge.getLeft());
+                  neighbours.retainAll(cover.getNeighbours(edge.getRight()));
+                  System.out.println(neighbours.size());
+//                  assertTrue(neighbours.size() < 3);
+              }
+          }
    }
 }

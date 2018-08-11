@@ -19,7 +19,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
+import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.io.SpectreReader;
 import uk.ac.uea.cmp.spectre.core.io.SpectreReaderFactory;
 import uk.ac.uea.cmp.spectre.core.io.nexus.Nexus;
@@ -30,6 +32,7 @@ import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
 import uk.ac.uea.cmp.spectre.lasso.LassoQuartets;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 
 public class UnrootedLasso extends RunnableTool {

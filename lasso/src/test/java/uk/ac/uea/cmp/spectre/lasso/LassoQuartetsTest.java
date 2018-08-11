@@ -197,4 +197,44 @@ public class LassoQuartetsTest {
 //
 //        }
     }
+
+    @Test
+    public void largeShelling() {
+        //Define a complete additive metric
+        double[][] diamonds = {
+                {0, 2, 4, 4, 4, 0, 0},
+                {2, 0, 4, 0, 0, 0, 0},
+                {4, 4, 0, 2, 0, 0, 0},
+                {4, 0, 2, 0, 4, 5, 0},
+                {4, 0, 0, 4, 0, 3, 3},
+                {0, 0, 0, 5, 3, 0, 2},
+                {0, 0, 0, 0, 3, 2, 0}
+        };
+        double[][] additive = {
+                {0, 2, 4, 4, 4, 5, 5},
+                {2, 0, 4, 4, 4, 5, 5},
+                {4, 4, 0, 2, 4, 5, 5},
+                {4, 4, 2, 0, 4, 5, 5},
+                {4, 4, 4, 4, 0, 3, 3},
+                {5, 5, 5, 5, 3, 0, 2},
+                {5, 5, 5, 5, 3, 2, 0}
+        };
+        //Convert this into a support graph
+        LassoDistanceGraph graph = new LassoDistanceGraph(new FlexibleDistanceMatrix(diamonds));
+        //Get a chordal subgraph of this
+        DistanceMatrix chordalSubgraph = new ChordalSubgraphFinder(graph).find();
+        //Enrich this to attempt to return it to a complete metric
+        TripletCoverFinder cover = new TripletCoverFinder(new LassoDistanceGraph(chordalSubgraph));
+        List<LassoDistanceGraph> tripletCovers = cover.findTripletCovers();
+        //Should only be one cover, with all vertices included
+        assertEquals(1, tripletCovers.size());
+        assertEquals(diamonds.length, tripletCovers.get(0).getTaxa().size());
+        //Enrich
+        DistanceMatrix complete = new LassoQuartets(tripletCovers.get(0)).altEnrichMatrix();
+        double[][] derived = complete.getMatrix(Comparator.naturalOrder());
+        //Check the input and output metrics are equivalent
+        for(int i = 0; i < additive.length; i++) {
+            assertArrayEquals(additive[i], derived[i], 0.001);
+        }
+    }
 }

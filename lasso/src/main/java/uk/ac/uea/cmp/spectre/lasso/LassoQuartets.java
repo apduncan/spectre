@@ -20,6 +20,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.IdentifierList;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
+import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.quad.Quad;
 import uk.ac.uea.cmp.spectre.core.ds.quad.SpectreQuad;
 import uk.ac.uea.cmp.spectre.core.ds.quad.quartet.QuartetSystem;
@@ -34,6 +35,8 @@ public class LassoQuartets {
     private LassoDistanceGraph matrix;
     //Subsets for 4c2. Used in place of combination class for speed.
     private final static int[][] PAIRS_OF_QUAD = {{0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3}};
+    //If two doubles vary by less than epsilon, they are considered equal
+    //Floating point precision causes some problems with checking for skew cycles
 
     public LassoQuartets(DistanceMatrix matrix) {
         this.matrix = new LassoDistanceGraph(matrix);
@@ -53,10 +56,9 @@ public class LassoQuartets {
      */
     public DistanceMatrix enrichMatrix() {
         long size = 0;
-        IdentifierCombinations combinations = new IdentifierCombinations(matrix.getTaxa(), 4);
-
         do {
             size = matrix.getMap().values().stream().filter(distance -> distance > 0).count();
+            IdentifierCombinations combinations = new IdentifierCombinations(matrix.getTaxa(), 4);
             for(IdentifierList combination : combinations) {
                 //Make the possible set of pairwise distances for this quarter
                 Set<Pair<Identifier, Identifier>> pairSet = allPairs(combination);
@@ -220,13 +222,18 @@ public class LassoQuartets {
         double dxw = matrix.getDistance(missing.getLeft(), knownPair.get(1));
         double dyz = matrix.getDistance(missing.getRight(), knownPair.get(0));
 
-        if((dxy + dzw) == (dxw + dyz))
+        if(doubleEqual(dxy + dzw, dxw + dyz))
             return false;
 
         //If this is resolved, then the distance of the missing cord can be inferred
         //For missing cord yw, d(y,w) = max{d(x,y) + d(z,w), d(x,w) + d(y,z)} - d(x,y)
         double dxu = matrix.getDistance(knownPair.get(0), knownPair.get(1));
         double dyw = Math.max(dxy + dzw, dxw + dyz) - dxu;
+        if(doubleEqual(dyw, new Double(0)))
+            return false;
+        double exist_dyw = matrix.getDistance(missing.getRight(), missing.getLeft());
+        if(exist_dyw != 0)
+            return false;
         matrix.setDistance(missing.getRight(), missing.getLeft(), dyw);
         return true;
     }
@@ -320,18 +327,18 @@ public class LassoQuartets {
         double bdac = matrix.getDistance(quad.get(1), quad.get(3)) + matrix.getDistance(quad.get(0), quad.get(2));
         //The two which are not minimal must be equal
         double min = Math.min(bcad, Math.min(abcd, bdac));
-        if(abcd == min && bcad != bdac)
+        if(doubleEqual(abcd, min) && !doubleEqual(bcad, bdac))
             return null;
-        if(bcad == min && abcd != bdac)
+        if(doubleEqual(bcad, min) && !doubleEqual(abcd, bdac))
             return null;
-        if(bdac == min && bcad != abcd)
+        if(doubleEqual(bdac, min) && !doubleEqual(bcad, abcd))
             return null;
         //The distance which is smaller that the sum of the other two has the two cherries
-        if(bcad == min)
+        if(doubleEqual(bcad, min))
             return new SpectreQuad(quad.get(1).getId(), quad.get(2).getId(), quad.get(0).getId(), quad.get(3).getId());
-        if(abcd == min)
+        if(doubleEqual(abcd, min))
             return new SpectreQuad(quad.get(0).getId(), quad.get(1).getId(), quad.get(2).getId(), quad.get(3).getId());
-        if(bdac == min)
+        if(doubleEqual(bdac, min))
             return new SpectreQuad(quad.get(1).getId(), quad.get(3).getId(), quad.get(0).getId(), quad.get(2).getId());
         return null;
     }
@@ -380,7 +387,7 @@ public class LassoQuartets {
      */
     private boolean distancesInMatrix(Set<Pair<Identifier, Identifier>> distances) {
         for(Pair<Identifier, Identifier> distance : distances) {
-           if(matrix.getDistance(distance.getLeft(), distance.getRight()) <= 0) {
+           if(doubleEqual(matrix.getDistance(distance.getLeft(), distance.getRight()), new Double(0))) {
                return false;
            }
         }
@@ -398,4 +405,8 @@ public class LassoQuartets {
         return distancesInMatrix(single);
     }
 
+    private boolean doubleEqual(Double one, Double two) {
+        boolean equal = one.equals(two);
+        return equal;
+    }
 }

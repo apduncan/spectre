@@ -64,7 +64,7 @@ public class LassoCLI {
     public static void main(String[] args) {
 
         CommandLine commandLine = new CommandLineHelper().startApp(createOptions(),
-                "netmake [options] <distance_matrix_file>",
+                "lasso [options] <distance_matrix_file>",
                 "Creates an equidistant tree from a distance matrix. The input matrix can have missing" +
                         "values. The tree is created from a subset of the input distances, where this subset has only " +
                         "one possible tree representation.\n" +
