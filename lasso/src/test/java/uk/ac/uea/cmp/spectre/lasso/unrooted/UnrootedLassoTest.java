@@ -36,6 +36,7 @@ import uk.ac.uea.cmp.spectre.core.io.nexus.NexusWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
@@ -54,7 +55,7 @@ public class UnrootedLassoTest {
         //Create a random matrix
         DistanceMatrix matrix = new RandomDistanceGenerator().generateDistances(30);
         //Delete random 20%
-        matrix = deleteRandom(matrix, 20);
+        matrix = deleteRandom(matrix, 10);
         //Save out
         File input = folder.newFile("random.nex");
         File output = folder.newFile("output.nex");
@@ -76,6 +77,7 @@ public class UnrootedLassoTest {
 
     @Test
     public void run_additive() throws IOException {
+        //TODO: This does not contain a stable triplet cover, just a triplet cover that happens to be shellable
         File input = FileUtils.toFile(UnrootedLassoTest.class.getResource("/ex-additive-diamonds.nex"));
         File output = folder.newFile("output_additive.nex");
         UnrootedLassoOptions options = new UnrootedLassoOptions(input, output);
@@ -101,8 +103,15 @@ public class UnrootedLassoTest {
     @Test
     public void run_large_additive() throws IOException {
         File input = FileUtils.toFile(UnrootedLassoTest.class.getResource("/macaque-additive-integer.nex"));
-        File output = folder.newFile("output_additive.nex");
-        UnrootedLassoOptions options = new UnrootedLassoOptions(input, output);
+        File random = folder.newFile("random.nex");
+        File output = folder.newFile("output_an_additive.nex");
+        random_integers(random, 20);
+//        input = random;
+        //Delete some of the values in additive matrix
+        DistanceMatrix partial = deleteRandom(new NexusReader().readDistanceMatrix(input), 10);
+        File inputPartial = folder.newFile("partial.nex");
+        new NexusWriter().writeDistanceMatrix(inputPartial, partial);
+        UnrootedLassoOptions options = new UnrootedLassoOptions(inputPartial, output);
         UnrootedLasso lasso = new UnrootedLasso(options);
         lasso.run();
         //Check output file exists
@@ -116,15 +125,24 @@ public class UnrootedLassoTest {
         //Compare matrix to expected
         Nexus original = new NexusReader().parse(input);
         DistanceMatrix derived = fileContents.getDistanceMatrix();
-        List<Pair<Identifier, Identifier>> zeros = derived.getMap().entrySet().stream().filter(val -> val.getValue() == 0).map(val -> val.getKey()).collect(Collectors.toList());
+//        List<Pair<Identifier, Identifier>> zeros = derived.getMap().entrySet().stream().filter(val -> val.getValue() == 0).map(val -> val.getKey()).collect(Collectors.toList());
 //        assertEquals(0, zeros.size());
 //        assertEquals(derived.getMap().values().stream().filter(val -> val != 0).count(), (derived.getTaxa().size() * (derived.getTaxa().size() -1))/2, 0.001);
         for(Map.Entry<Pair<Identifier, Identifier>, Double> entry: derived.getMap().entrySet()) {
             double dist = original.getDistanceMatrix().getDistance(entry.getKey().getRight().getName(), entry.getKey().getLeft().getName());
             if(original.getDistanceMatrix().getDistance(entry.getKey().getRight().getName(), entry.getKey().getLeft().getName()) != entry.getValue())
-                System.out.println(entry + " | " + dist);
+                System.out.println(entry + " | " + original.getDistanceMatrix().getDistance(entry.getKey().getRight().getName(), entry.getKey().getLeft().getName()));
 //            assertEquals(original.getDistanceMatrix().getDistance(entry.getKey().getRight().getName(), entry.getKey().getLeft().getName()), entry.getValue(), 0.001);
         }
+    }
+
+    private void random_integers(File output, int max) throws IOException {
+        FlexibleDistanceMatrix dm = new FlexibleDistanceMatrix(new RandomDistanceGenerator().generateDistances(30));
+        List<Pair<Identifier, Identifier>> keys = dm.getMap().keySet().stream().collect(Collectors.toList());
+        for(Pair<Identifier, Identifier> dist: keys) {
+            dm.setDistance(dist.getRight(), dist.getLeft(), ThreadLocalRandom.current().nextInt(1, max));
+        }
+        new NexusWriter().writeDistanceMatrix(output, dm);
     }
 
     private DistanceMatrix deleteRandom(DistanceMatrix matrix, int percent) {

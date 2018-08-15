@@ -59,6 +59,8 @@ public class QuartetLassoResult {
         writer.append(matrix.getTaxa());
         writer.appendLine();
         writer.append(this.quartetBlock.toString());
+        writer.appendLine();
+        writer.append(matrix);
         writer.write(file);
     }
 }

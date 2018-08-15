@@ -108,20 +108,13 @@ public class UnrootedLasso extends RunnableTool {
 
     private UnrootedLassoResult execute(DistanceMatrix input) {
         UnrootedLassoResult result = new UnrootedLassoResult();
-        this.notifyUser("Locating quartet covers in input");
-        List<LassoDistanceGraph> tripletCovers = new TripletCoverFinder(new LassoDistanceGraph(input))
-                .findTripletCovers(this.options.getSeedTree());
-        this.notifyUser(tripletCovers.size() + " quartet covers located");
-        //For each component, construct a chordal subgraph
-        int i = 1;
-        for(LassoDistanceGraph cover: tripletCovers) {
-            //For each quartet cover, convert this to a tree metric
-            String tripletMessage = "[Triplet Cover " + i + " of " + tripletCovers.size() + ", " + cover.getTaxa().size() + " taxa] ";
-            this.notifyUser(tripletMessage + "Building tree metric from quartet cover");
-            DistanceMatrix treeMetric = new LassoQuartets(cover).altEnrichMatrix();
-            result.addResult(cover, treeMetric);
-            i++;
-        }
+        this.notifyUser("Locating triplet cover in input");
+        LassoDistanceGraph cover = new TripletCoverBuilder(new LassoDistanceGraph(input)).find();
+        this.notifyUser("Triplet cover for " + cover.size() + " taxa located");
+        //Shell this cover to a tree metric
+        this.notifyUser("Shelling triplet cover to tree metric");
+        DistanceMatrix treeMetric = new LassoQuartets(cover).enrichMatrix();
+        result.addResult(cover, treeMetric);
         return result;
     }
 }

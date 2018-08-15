@@ -25,6 +25,7 @@ import uk.ac.uea.cmp.spectre.core.ds.quad.Quad;
 import uk.ac.uea.cmp.spectre.core.ds.quad.SpectreQuad;
 import uk.ac.uea.cmp.spectre.core.ds.quad.quartet.QuartetSystem;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -62,7 +63,6 @@ public class LassoQuartets {
             for(IdentifierList combination : combinations) {
                 //Make the possible set of pairwise distances for this quarter
                 Set<Pair<Identifier, Identifier>> pairSet = allPairs(combination);
-
                 //Iterate over each distance x. If pairSet - x is in dm, and x is not in dm, then infer x.
                 for(Pair pair : pairSet) {
                     Set<Pair<Identifier, Identifier>> five = new HashSet(pairSet);
@@ -201,6 +201,8 @@ public class LassoQuartets {
      */
     private boolean inferDistance(Set<Pair<Identifier, Identifier>> known, Pair<Identifier, Identifier> missing,
                                     IdentifierList combination) {
+
+
         //Check the five distances are known
         if(!distancesInMatrix(known))
             return false;
@@ -217,24 +219,26 @@ public class LassoQuartets {
         IdentifierList knownPair = new IdentifierList(combination);
         knownPair.remove(missing.getRight());
         knownPair.remove(missing.getLeft());
-        double dxy = matrix.getDistance(missing.getLeft(), knownPair.get(0));
-        double dzw = matrix.getDistance(missing.getRight(), knownPair.get(1));
-        double dxw = matrix.getDistance(missing.getLeft(), knownPair.get(1));
-        double dyz = matrix.getDistance(missing.getRight(), knownPair.get(0));
+        BigDecimal dxy = new BigDecimal(matrix.getDistance(missing.getLeft(), knownPair.get(0)));
+        BigDecimal dzw = new BigDecimal(matrix.getDistance(missing.getRight(), knownPair.get(1)));
+        BigDecimal dxw = new BigDecimal(matrix.getDistance(missing.getLeft(), knownPair.get(1)));
+        BigDecimal dyz = new BigDecimal(matrix.getDistance(missing.getRight(), knownPair.get(0)));
+        BigDecimal dxy_dzw = dxy.add(dzw);
+        BigDecimal dxw_dyz = dxw.add(dyz);
 
-        if(doubleEqual(dxy + dzw, dxw + dyz))
+        if(dxy_dzw.equals(dxw_dyz))
             return false;
 
         //If this is resolved, then the distance of the missing cord can be inferred
         //For missing cord yw, d(y,w) = max{d(x,y) + d(z,w), d(x,w) + d(y,z)} - d(x,y)
-        double dxu = matrix.getDistance(knownPair.get(0), knownPair.get(1));
-        double dyw = Math.max(dxy + dzw, dxw + dyz) - dxu;
-        if(doubleEqual(dyw, new Double(0)))
+        BigDecimal dxu = new BigDecimal(matrix.getDistance(knownPair.get(0), knownPair.get(1)));
+        BigDecimal dyw = new BigDecimal(Math.max(dxy_dzw.doubleValue(), dxw_dyz.doubleValue())).subtract(dxu);
+        if(dyw.equals(new BigDecimal(0)))
             return false;
         double exist_dyw = matrix.getDistance(missing.getRight(), missing.getLeft());
         if(exist_dyw != 0)
             return false;
-        matrix.setDistance(missing.getRight(), missing.getLeft(), dyw);
+        matrix.setDistance(missing.getRight(), missing.getLeft(), dyw.doubleValue());
         return true;
     }
 
