@@ -53,7 +53,7 @@ public class UnrootedLassoTest {
     @Test
     public void run() throws IOException {
         //Create a random matrix
-        DistanceMatrix matrix = new RandomDistanceGenerator().generateDistances(30);
+        DistanceMatrix matrix = new RandomDistanceGenerator().generateDistances(100);
         //Delete random 20%
         matrix = deleteRandom(matrix, 10);
         //Save out
@@ -137,7 +137,7 @@ public class UnrootedLassoTest {
     }
 
     private void random_integers(File output, int max) throws IOException {
-        FlexibleDistanceMatrix dm = new FlexibleDistanceMatrix(new RandomDistanceGenerator().generateDistances(30));
+        FlexibleDistanceMatrix dm = new FlexibleDistanceMatrix(new RandomDistanceGenerator().generateDistances(50));
         List<Pair<Identifier, Identifier>> keys = dm.getMap().keySet().stream().collect(Collectors.toList());
         for(Pair<Identifier, Identifier> dist: keys) {
             dm.setDistance(dist.getRight(), dist.getLeft(), ThreadLocalRandom.current().nextInt(1, max));
