@@ -48,7 +48,7 @@ public class IncrementalLassoTest {
     }
 
     private void random_integers(File output, int max) throws IOException {
-        FlexibleDistanceMatrix dm = new FlexibleDistanceMatrix(new RandomDistanceGenerator().generateDistances(8));
+        FlexibleDistanceMatrix dm = new FlexibleDistanceMatrix(new RandomDistanceGenerator().generateDistances(50));
         List<Pair<Identifier, Identifier>> keys = dm.getMap().keySet().stream().collect(Collectors.toList());
         for (Pair<Identifier, Identifier> dist : keys) {
             dm.setDistance(dist.getRight(), dist.getLeft(), ThreadLocalRandom.current().nextInt(1, max));
@@ -95,12 +95,12 @@ public class IncrementalLassoTest {
 //        assertEquals(0, zeros.size());
         Pair<LassoDistanceGraph, Set<Pair<Identifier, Identifier>>> derivedPair = new IncrementalLasso(new LassoDistanceGraph(original.getDistanceMatrix())).find();
         DistanceMatrix derived = derivedPair.getLeft();
-        new NexusWriter().writeDistanceMatrix(new File("/home/hal/omigod.nex"), derived);
+        new NexusWriter().writeDistanceMatrix(new File("/home/hal/omigod-large.nex"), derived);
         QuartetLassoResult qr = new QuartetLassoResult();
         qr.setQuartetBlock(new LassoQuartets(derived).getQuartetsAsString(true));
-        qr.setMatrix(derived);
-        qr.save(new File("/home/hal/quartetadditives.nex"));
-        new NexusWriter().writeDistanceMatrix(new File("/home/hal/omigod-partial.nex"), partial);
+//        qr.setMatrix(derived);
+//        qr.save(new File("/home/hal/quartetadditives.nex"));
+        new NexusWriter().writeDistanceMatrix(new File("/home/hal/omigod-large-partial.nex"), partial);
 //        assertEquals(derived.getMap().values().stream().filter(val -> val != 0).count(), (derived.getTaxa().size() * (derived.getTaxa().size() -1))/2, 0.001);
         for (Map.Entry<Pair<Identifier, Identifier>, Double> entry : derived.getMap().entrySet()) {
             double dist = original.getDistanceMatrix().getDistance(entry.getKey().getRight().getName(), entry.getKey().getLeft().getName());

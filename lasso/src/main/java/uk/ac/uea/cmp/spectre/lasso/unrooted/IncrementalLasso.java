@@ -29,9 +29,11 @@ import java.util.stream.Collectors;
 
 public class IncrementalLasso {
     private final LassoDistanceGraph graph;
+    private Set<Pair<Identifier, Identifier>> usedStarts;
 
     public IncrementalLasso(LassoDistanceGraph graph) {
         this.graph = graph;
+        this.usedStarts = new HashSet<>();
     }
 
     /**
@@ -69,55 +71,62 @@ public class IncrementalLasso {
     }
 
     public Pair<LassoDistanceGraph, Set<Pair<Identifier, Identifier>>> find() throws IllegalStateException {
-        Set<Pair<Identifier, Identifier>> lasso = new HashSet<>();
-        LassoDistanceGraph metric = new LassoDistanceGraph(new FlexibleDistanceMatrix());
-        boolean terminate = false;
-
-        List<Identifier> triangle = startTriangle();
-        //Add these to metric, and to lasso
-        augmentEdge(triangle.get(0), triangle.get(1), metric);
-        augmentEdge(triangle.get(0), triangle.get(2), metric);
-        augmentEdge(triangle.get(1), triangle.get(2), metric);
-        addToLasso(triangle.get(0), triangle.get(1), metric, lasso);
-        addToLasso(triangle.get(0), triangle.get(2), metric, lasso);
-        addToLasso(triangle.get(1), triangle.get(2), metric, lasso);
-        Set<Identifier> verticesAdded = triangle.stream().collect(Collectors.toSet());
+        Set<Pair<Identifier, Identifier>> lasso;
+        LassoDistanceGraph metric;
 
         do {
-            boolean inferFlag = false;
-            //Loop through edges in input graph, find vertices which are adjacent to both ends of edge
-            Set<Pair<Identifier, Identifier>> iterableCords = new HashSet<>(metric.getMap().keySet());
-            for(Pair<Identifier, Identifier> cord : iterableCords) {
-                Set<Identifier> candidates = intersectionNeighbourhood(cord.getLeft(), cord.getRight(), graph);
-                candidates.removeAll(verticesAdded);
-                //Remove and candidates already in metric
-                //Loop through candidates and attempt to attach in metric
-                Set<Identifier> iteratableCandidates = new HashSet<>(candidates);
-                for(Identifier candidate: iteratableCandidates) {
-                     InferResults inferrable = inferDistances(candidate, cord, metric);
-                     if(!inferrable.isCherry() && !inferrable.getInferred().stream().filter(p -> p.getRight() <= 0).findFirst().isPresent()) {
-                         //exlcude this vertex from consideration in the future
-                         verticesAdded.add(candidate);
-                         candidates.remove(candidate);
-                         //add all these edges to our metric, and lasso
-                         augmentEdge(cord.getLeft(), candidate, metric);
-                         augmentEdge(cord.getRight(), candidate, metric);
-                         addToLasso(cord.getRight(), candidate, metric, lasso);
-                         addToLasso(cord.getLeft(), candidate, metric, lasso);
-                         //add inferred edges
-                         inferrable.getInferred().stream().forEach(res -> {
-                             metric.setDistance(res.getLeft().getLeft().getName(), res.getLeft().getRight().getName(), res.getRight());
-                         });
-                         inferFlag = true;
-                     } else {
-                         //TODO: Add code to attempt to attach to cords of form (candidate, other cherry vertex)
-                     }
+            metric = new LassoDistanceGraph(new FlexibleDistanceMatrix());
+            lasso = new HashSet<>();
+            boolean terminate = false;
+            List<Identifier> triangle = startTriangle();
+            //Add these to metric, and to lasso
+            augmentEdge(triangle.get(0), triangle.get(1), metric);
+            augmentEdge(triangle.get(0), triangle.get(2), metric);
+            augmentEdge(triangle.get(1), triangle.get(2), metric);
+            addToLasso(triangle.get(0), triangle.get(1), metric, lasso);
+            addToLasso(triangle.get(0), triangle.get(2), metric, lasso);
+            addToLasso(triangle.get(1), triangle.get(2), metric, lasso);
+            Set<Identifier> verticesAdded = triangle.stream().collect(Collectors.toSet());
+            do {
+                boolean inferFlag = false;
+                //Loop through edges in input graph, find vertices which are adjacent to both ends of edge
+                Set<Pair<Identifier, Identifier>> iterableCords = new HashSet<>(metric.getMap().keySet());
+                for (Pair<Identifier, Identifier> cord : iterableCords) {
+                    Set<Identifier> candidates = intersectionNeighbourhood(cord.getLeft(), cord.getRight(), graph);
+                    candidates.removeAll(verticesAdded);
+                    //Remove and candidates already in metric
+                    //Loop through candidates and attempt to attach in metric
+                    Set<Identifier> iteratableCandidates = new HashSet<>(candidates);
+                    for (Identifier candidate : iteratableCandidates) {
+                        InferResults inferrable = inferDistances(candidate, cord, metric);
+                        if (!inferrable.isCherry() && !inferrable.getInferred().stream().filter(p -> p.getRight() <= 0).findFirst().isPresent()) {
+                            //exlcude this vertex from consideration in the future
+                            verticesAdded.add(candidate);
+                            candidates.remove(candidate);
+                            //add all these edges to our metric, and lasso
+                            augmentEdge(cord.getLeft(), candidate, metric);
+                            augmentEdge(cord.getRight(), candidate, metric);
+                            addToLasso(cord.getRight(), candidate, metric, lasso);
+                            addToLasso(cord.getLeft(), candidate, metric, lasso);
+                            //add inferred edges
+                            final LassoDistanceGraph lambdaMetric = metric;
+                            inferrable.getInferred().stream().forEach(res -> {
+                                lambdaMetric.setDistance(res.getLeft().getLeft().getName(), res.getLeft().getRight().getName(), res.getRight());
+                            });
+                            inferFlag = true;
+                        } else {
+                            //TODO: Add code to attempt to attach to cords of form (candidate, other cherry vertex)
+                        }
+                    }
                 }
+                terminate = !inferFlag;
+            } while (!terminate);
+            if(metric.getTaxa().size() > 3) {
+                return new ImmutablePair<>(metric, lasso);
             }
-            terminate = !inferFlag;
-        } while(!terminate);
-        return new ImmutablePair<>(metric, lasso);
-    };
+        } while (this.usedStarts.size() < this.graph.getMap().size() - 2 && metric.size() <= 3);
+        throw new IllegalStateException("No valid trees on four or more leaves found");
+    }
 
     private void addToLasso(Identifier v1, Identifier v2, LassoDistanceGraph metric, Set<Pair<Identifier, Identifier>> lasso) {
         lasso.add(sortedPair(metric.getTaxa().getByName(v1.getName()), metric.getTaxa().getByName(v2.getName())));
@@ -130,9 +139,11 @@ public class IncrementalLasso {
                 .sorted((a,b) -> a.getValue().compareTo(b.getValue()))
                 .map(e -> e.getKey())
                 .collect(Collectors.toList());
+        orderedEdges.removeAll(this.usedStarts);
         for (Pair<Identifier, Identifier> edge : orderedEdges) {
             Set<Identifier> intersectEdge = intersectionNeighbourhood(edge.getLeft(), edge.getRight(), graph);
             Identifier selected = null;
+            intersectEdge.removeIf(v -> this.usedStarts.contains(sortedPair(v, edge.getRight())) || this.usedStarts.contains(sortedPair(v, edge.getLeft())));
             if (intersectEdge.size() > 1) {
                 //locate vertex with lowest distance from the cluster induced by deleting the hypothetical internal vertex
                 Double minDist = null;
@@ -152,6 +163,7 @@ public class IncrementalLasso {
                     triangle.add(selected);
                     triangle.add(edge.getRight());
                     triangle.add(edge.getLeft());
+                    this.usedStarts.add(edge);
                     return triangle;
                 }
             }
