@@ -35,17 +35,17 @@ import java.util.stream.Stream;
  */
 public class UnrootedLassoGUIPanel extends javax.swing.JPanel 
         implements LassoToolTab {
-    public static javax.swing.DefaultComboBoxModel<String> comboModel() {
-        String[] opts = Arrays.stream(ChordalSubgraphFinder.SEED_TREE.values()).map(v -> v.toString()).toArray(String[]::new);
-        return new javax.swing.DefaultComboBoxModel<>(opts);
-    }
+//    public static javax.swing.DefaultComboBoxModel<String> comboModel() {
+//        String[] opts = Arrays.stream(ChordalSubgraphFinder.SEED_TREE.values()).map(v -> v.toString()).toArray(String[]::new);
+//        return new javax.swing.DefaultComboBoxModel<>(opts);
+//    }
     /**
      * Creates new form UnrootedLassoGUIPanel
      */
     public UnrootedLassoGUIPanel() {
         initComponents();
         initTooltips();
-        this.inputComponents = new Component[]{cmbSeedTree};
+        this.inputComponents = new Component[0];
     }
 
     /**
@@ -58,57 +58,57 @@ public class UnrootedLassoGUIPanel extends javax.swing.JPanel
     private void initComponents() {
 
         pnlOptions = new javax.swing.JPanel();
-        lblSeedTree = new javax.swing.JLabel();
-        cmbSeedTree = new javax.swing.JComboBox<>();
+        //lblSeedTree = new javax.swing.JLabel();
+        //cmbSeedTree = new javax.swing.JComboBox<>();
 
         pnlOptions.setBorder(javax.swing.BorderFactory.createTitledBorder("Options"));
 
-        lblSeedTree.setText("Seed Tree");
+        //lblSeedTree.setText("Seed Tree");
 
-        cmbSeedTree.setModel(UnrootedLassoGUIPanel.comboModel());
-        cmbSeedTree.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cmbSeedTreeActionPerformed(evt);
-            }
-        });
+//        cmbSeedTree.setModel(UnrootedLassoGUIPanel.comboModel());
+//        cmbSeedTree.addActionListener(new java.awt.event.ActionListener() {
+//            public void actionPerformed(java.awt.event.ActionEvent evt) {
+//                cmbSeedTreeActionPerformed(evt);
+//            }
+//        });
 
         javax.swing.GroupLayout pnlOptionsLayout = new javax.swing.GroupLayout(pnlOptions);
-        pnlOptions.setLayout(pnlOptionsLayout);
-        pnlOptionsLayout.setHorizontalGroup(
-            pnlOptionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlOptionsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(lblSeedTree)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(cmbSeedTree, 0, 164, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        pnlOptionsLayout.setVerticalGroup(
-            pnlOptionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pnlOptionsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(pnlOptionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblSeedTree)
-                    .addComponent(cmbSeedTree, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(pnlOptions, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(pnlOptions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
+//        pnlOptions.setLayout(pnlOptionsLayout);
+//        pnlOptionsLayout.setHorizontalGroup(
+//            pnlOptionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+//            .addGroup(pnlOptionsLayout.createSequentialGroup()
+//                .addContainerGap()
+//                .addComponent(lblSeedTree)
+//                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+//                .addComponent(cmbSeedTree, 0, 164, Short.MAX_VALUE)
+//                .addContainerGap())
+//        );
+//        pnlOptionsLayout.setVerticalGroup(
+//            pnlOptionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+//            .addGroup(pnlOptionsLayout.createSequentialGroup()
+//                .addContainerGap()
+//                .addGroup(pnlOptionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+//                    .addComponent(lblSeedTree)
+//                    .addComponent(cmbSeedTree, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+//                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+//        );
+//
+//        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+//        this.setLayout(layout);
+//        layout.setHorizontalGroup(
+//            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+//            .addGroup(layout.createSequentialGroup()
+//                .addContainerGap()
+//                .addComponent(pnlOptions, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+//                .addContainerGap())
+//        );
+//        layout.setVerticalGroup(
+//            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+//            .addGroup(layout.createSequentialGroup()
+//                .addContainerGap()
+//                .addComponent(pnlOptions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+//                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+//        );
     }// </editor-fold>//GEN-END:initComponents
 
     private void cmbSeedTreeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbSeedTreeActionPerformed
@@ -117,14 +117,11 @@ public class UnrootedLassoGUIPanel extends javax.swing.JPanel
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JComboBox<String> cmbSeedTree;
-    private javax.swing.JLabel lblSeedTree;
     private javax.swing.JPanel pnlOptions;
     // End of variables declaration//GEN-END:variables
     private Component[] inputComponents;
 
     private void initTooltips() {
-        cmbSeedTree.setToolTipText(UnrootedLassoOptions.DESC_SEED_TREE);
     }
 
     @Override
@@ -134,15 +131,8 @@ public class UnrootedLassoGUIPanel extends javax.swing.JPanel
 
     @Override
     public void runTool(File input, File output, ToolHost host, StatusTracker tracker) {
-        //Get additional unrooted lasso parameters
+        //Get additional unrooted rooted parameters
         UnrootedLassoOptions options = new UnrootedLassoOptions();
-        try {
-            ChordalSubgraphFinder.SEED_TREE seed = ChordalSubgraphFinder.SEED_TREE.valueOf(cmbSeedTree.getSelectedItem().toString());
-            options.setSeedTree(seed);
-        } catch (Exception e) {
-            host.showErrorDialog("Invalid setting for seed tree");
-            return;
-        }
         options.setInput(input);
         options.setOutput(output);
         new UnrootedLassoRunner(host).runLasso(options, tracker);

@@ -23,9 +23,9 @@ import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.distance.RandomDistanceGenerator;
 import uk.ac.uea.cmp.spectre.core.ds.tree.newick.NewickNode;
-import uk.ac.uea.cmp.spectre.lasso.lasso.DistanceUpdaterFactory;
-import uk.ac.uea.cmp.spectre.lasso.lasso.LassoOptions;
-import uk.ac.uea.cmp.spectre.lasso.lasso.ModalDistanceUpdater;
+import uk.ac.uea.cmp.spectre.lasso.rooted.DistanceUpdaterFactory;
+import uk.ac.uea.cmp.spectre.lasso.rooted.RootedLassoOptions;
+import uk.ac.uea.cmp.spectre.lasso.rooted.ModalDistanceUpdater;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -118,7 +118,7 @@ public class LassoDistanceGraphTest {
         cluster.add(this.graph.getTaxa().get(0));
         cluster.add(this.graph.getTaxa().get(1));
         //Test a vertex which should be a cluster rather than a taxon
-        LassoTree joined = this.graph.joinCluster(new ArrayList<>(cluster), new ModalDistanceUpdater(new LassoOptions()));
+        LassoTree joined = this.graph.joinCluster(new ArrayList<>(cluster), new ModalDistanceUpdater(new RootedLassoOptions()));
         assertFalse(this.graph.isTaxon(joined.getTaxon()));
     }
 
@@ -139,7 +139,7 @@ public class LassoDistanceGraphTest {
         cluster.add(lg.getTaxa().get(0));
         cluster.add(lg.getTaxa().get(1));
         cluster.add(lg.getTaxa().get(2));
-        LassoTree clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL.get(new LassoOptions()));
+        LassoTree clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL.get(new RootedLassoOptions()));
         //Early test to see if functioning at all
         for (NewickNode child : clustered.getBranches()) {
             assertEquals(1, child.getLength(), 0.001);
@@ -165,7 +165,7 @@ public class LassoDistanceGraphTest {
         cluster = new ArrayList<>();
         cluster.add(lg.getTaxa().get(0));
         cluster.add(lg.getTaxa().get(1));
-        clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL.get(new LassoOptions()));
+        clustered = lg.joinCluster(cluster, DistanceUpdaterFactory.MODAL.get(new RootedLassoOptions()));
         LassoTree topoCompare = new LassoTree(clustered);
         topoCompare.removeInternalIdentifier();
         clustered.removeInternalIdentifier();
@@ -206,7 +206,7 @@ public class LassoDistanceGraphTest {
         join.add(lg.getTaxa().get(0));
         join.add(lg.getTaxa().get(1));
         join.add(lg.getTaxa().get(2));
-        lg.joinCluster(new ArrayList<>(join), DistanceUpdaterFactory.MODAL.get(new LassoOptions()));
+        lg.joinCluster(new ArrayList<>(join), DistanceUpdaterFactory.MODAL.get(new RootedLassoOptions()));
         //Get cluster which should map the joined cluster
         Identifier clusterVertex = lg.getTaxa().get(1);
         cluster = lg.getCluster(clusterVertex);
@@ -216,7 +216,7 @@ public class LassoDistanceGraphTest {
         copy.removeInternalIdentifier();
         Boolean validTopo = Stream.of(validNewicks).filter(s -> copy.toString().equals(s)).count() > 0;
         assertTrue(validTopo);
-        Identifier missing = new Identifier("uk.ac.uea.cmp.spectre.lasso.Test", -2);
+        Identifier missing = new Identifier("uk.ac.uea.cmp.spectre.rooted.Test", -2);
         exception.expect(IllegalStateException.class);
         lg.getCluster(missing);
     }

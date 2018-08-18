@@ -17,11 +17,11 @@ package uk.ac.uea.cmp.spectre.lasso.unrooted;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
-import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.io.SpectreReader;
 import uk.ac.uea.cmp.spectre.core.io.SpectreReaderFactory;
 import uk.ac.uea.cmp.spectre.core.io.nexus.Nexus;
@@ -29,11 +29,11 @@ import uk.ac.uea.cmp.spectre.core.io.nexus.NexusReader;
 import uk.ac.uea.cmp.spectre.core.ui.gui.RunnableTool;
 import uk.ac.uea.cmp.spectre.core.ui.gui.StatusTracker;
 import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
-import uk.ac.uea.cmp.spectre.lasso.LassoQuartets;
+import uk.ac.uea.cmp.spectre.lasso.LassoShelling;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 public class UnrootedLasso extends RunnableTool {
     private UnrootedLassoOptions options;
@@ -91,7 +91,7 @@ public class UnrootedLasso extends RunnableTool {
                 throw new IOException("Could not find distance matrix in input");
 
             this.notifyUser("Loaded distance matrix containing " + matrix.size() + " taxa");
-            this.notifyUser("Executing Unrooted Lasso");
+            this.notifyUser("Executing Unrooted RootedLasso");
             UnrootedLassoResult result = this.execute(matrix);
             this.notifyUser("Saving results to disk");
             result.save(this.options.getOutput());
@@ -108,13 +108,11 @@ public class UnrootedLasso extends RunnableTool {
 
     private UnrootedLassoResult execute(DistanceMatrix input) {
         UnrootedLassoResult result = new UnrootedLassoResult();
-        this.notifyUser("Locating triplet cover in input");
-        LassoDistanceGraph cover = new TripletCoverBuilder(new LassoDistanceGraph(input)).find();
-        this.notifyUser("Triplet cover for " + cover.size() + " taxa located");
-        //Shell this cover to a tree metric
-        this.notifyUser("Shelling triplet cover to tree metric");
-        DistanceMatrix treeMetric = new LassoQuartets(cover).enrichMatrix();
-        result.addResult(cover, treeMetric);
+        this.notifyUser("Lassoing unrooted tree");
+        Pair<LassoDistanceGraph, Set<Pair<Identifier, Identifier>>> tree = new IncrementalLasso(new LassoDistanceGraph(input)).find();
+        this.notifyUser("Tree on " + tree.getLeft().getTaxa().size() + " taxa located");
+        result.setTree(tree.getLeft());
+        result.setLasso(tree.getRight());
         return result;
     }
 }

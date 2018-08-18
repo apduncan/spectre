@@ -13,7 +13,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;
+package uk.ac.uea.cmp.spectre.lasso.rooted;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -28,7 +28,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.*;
 
-public class LassoCLITest {
+public class RootedLassoCLITest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -37,8 +37,8 @@ public class LassoCLITest {
 
     @Before
     public void before() {
-         Logger.getLogger(LassoCLI.class.getName()).setLevel(Level.FATAL);
-         Logger.getLogger(Lasso.class.getName()).setLevel(Level.FATAL);
+         Logger.getLogger(RootedLassoCLI.class.getName()).setLevel(Level.FATAL);
+         Logger.getLogger(RootedLasso.class.getName()).setLevel(Level.FATAL);
     }
 
     //@Test
@@ -47,9 +47,9 @@ public class LassoCLITest {
         File outputDir = temporaryFolder.getRoot();
         File outputFile = new File(outputDir.getAbsolutePath() + "output.nex");
 
-        File testFile1 = FileUtils.toFile(LassoCLITest.class.getResource("/random100.nex"));
+        File testFile1 = FileUtils.toFile(RootedLassoCLITest.class.getResource("/random100.nex"));
 
-        LassoCLI.main(new String[]{
+        RootedLassoCLI.main(new String[]{
                 "-o", outputFile.getAbsolutePath(),
                 "-r", "1",
                 testFile1.getAbsolutePath()
@@ -61,13 +61,13 @@ public class LassoCLITest {
 
     @Test
     public void testTree2() throws IOException {
-        //uk.ac.uea.cmp.spectre.lasso.Test with more complex options
+        //uk.ac.uea.cmp.spectre.rooted.Test with more complex options
         File outputDir = temporaryFolder.getRoot();
         File outputFile = new File(outputDir.getAbsolutePath() + "output.nex");
 
-        File testFile1 = FileUtils.toFile(LassoCLITest.class.getResource("/example-mod.nex"));
+        File testFile1 = FileUtils.toFile(RootedLassoCLITest.class.getResource("/example-mod.nex"));
 
-        LassoCLI.main(new String[]{
+        RootedLassoCLI.main(new String[]{
                 "-o", outputFile.getAbsolutePath(),
                 "-r", "1",
                 "-du", "MODAL",
@@ -85,9 +85,9 @@ public class LassoCLITest {
         File outputDir = temporaryFolder.getRoot();
         File outputFile = new File(outputDir.getAbsolutePath() + "output.nex");
 
-        File testFile1 = FileUtils.toFile(LassoCLITest.class.getResource("/paradoxus-part-question.nex"));
+        File testFile1 = FileUtils.toFile(RootedLassoCLITest.class.getResource("/paradoxus-part-question.nex"));
 
-        LassoCLI.main(new String[]{
+        RootedLassoCLI.main(new String[]{
                 "-o", outputFile.getAbsolutePath(),
                 testFile1.getAbsolutePath()
         });
@@ -102,9 +102,9 @@ public class LassoCLITest {
         File outputDir = temporaryFolder.getRoot();
         File outputFile = new File(outputDir.getAbsolutePath() + "output.nex");
 
-        File testFile1 = FileUtils.toFile(LassoCLITest.class.getResource("/random100.nex"));
+        File testFile1 = FileUtils.toFile(RootedLassoCLITest.class.getResource("/random100.nex"));
 
-        LassoCLI.main(new String[]{
+        RootedLassoCLI.main(new String[]{
                 "-o", outputFile.getAbsolutePath(),
                 "-r", "5",
                 "-a", "15",
@@ -123,9 +123,9 @@ public class LassoCLITest {
         File outputDir = temporaryFolder.getRoot();
         File outputFile = new File(outputDir.getAbsolutePath() + "output.nex");
 
-        File testFile1 = FileUtils.toFile(LassoCLITest.class.getResource("/nonexistent.nex"));
+        File testFile1 = FileUtils.toFile(RootedLassoCLITest.class.getResource("/nonexistent.nex"));
 
-        LassoCLI.main(new String[]{
+        RootedLassoCLI.main(new String[]{
                 "-o", outputFile.getAbsolutePath(),
                 "/home/hal/missing.nex"
         });

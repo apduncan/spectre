@@ -13,7 +13,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;import org.apache.commons.io.FileUtils;
+package uk.ac.uea.cmp.spectre.lasso.rooted;import org.apache.commons.io.FileUtils;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
@@ -31,7 +31,7 @@ import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 
-public class LassoTest {
+public class RootedLassoTest {
     @Before
     public void setup() {
         BasicConfigurator.configure();
@@ -43,20 +43,20 @@ public class LassoTest {
 
     @Test
     public void run1() throws IOException {
-        //Test lasso with adapted worked example from paper, so only a single output tree is possible
-        File input = FileUtils.toFile(LassoTest.class.getResource("/example-mod.nex"));
+        //Test rooted with adapted worked example from paper, so only a single output tree is possible
+        File input = FileUtils.toFile(RootedLassoTest.class.getResource("/example-mod.nex"));
         File output = new File(folder.getRoot(), "output.nex");
-        LassoOptions options = new LassoOptions();
+        RootedLassoOptions options = new RootedLassoOptions();
         options.setInput(input);
         options.setOutput(output);
-        Lasso lasso = new Lasso(options);
+        RootedLasso lasso = new RootedLasso(options);
         lasso.run();
         //Check that the output file exists
         assertTrue(output.exists());
         List<String> outputLines = FileUtils.readLines(output, "UTF-8");
         //Check file is not empty
         assertTrue(!outputLines.isEmpty());
-        //Check strong lasso is as expected
+        //Check strong rooted is as expected
         String[] expectedLasso = {  "[B -> E, 6.0]",  "[B -> D, 2.0]", "[C -> D, 2.0]", "[A -> D, 4.0]", "[B -> C, 2.0]" };
         String[] expectedNewicks = {
                 "TREE tree1 = (((B:1.0,C:1.0,D:1.0):1.0,A:2.0):1.0,E:3.0):0.0;",
@@ -68,7 +68,7 @@ public class LassoTest {
         };
         //Trim whitespace from outputlines
         outputLines = outputLines.stream().map(String::trim).collect(Collectors.toList());
-        //Check strong lasso matches what is expected
+        //Check strong rooted matches what is expected
         long matched = Stream.of(expectedLasso).filter(outputLines::contains).count();
         assertEquals(expectedLasso.length, matched);
         //Check tree is isomorphically equivalent to what is expected
@@ -78,20 +78,20 @@ public class LassoTest {
 
     @Test
     public void run2() throws IOException {
-        //Test lasso when two disconnected components exist in the input
-        File input = FileUtils.toFile(LassoTest.class.getResource("/disconnected.nex"));
+        //Test rooted when two disconnected components exist in the input
+        File input = FileUtils.toFile(RootedLassoTest.class.getResource("/disconnected.nex"));
         File output = new File(folder.getRoot(), "output.nex");
-        LassoOptions options = new LassoOptions();
+        RootedLassoOptions options = new RootedLassoOptions();
         options.setInput(input);
         options.setOutput(output);
-        Lasso lasso = new Lasso(options);
+        RootedLasso lasso = new RootedLasso(options);
         lasso.run();
         //Check that the output file exists
         assertTrue(output.exists());
         List<String> outputLines = FileUtils.readLines(output, "UTF-8");
         //Check file is not empty
         assertTrue(!outputLines.isEmpty());
-        //Check strong lasso is as expected
+        //Check strong rooted is as expected
         String[] expectedLasso = {  "[C -> D, 1.0]",  "[D -> E, 1.0]", "[C -> E, 1.0]" };
         String[] expectedNewicks = {
                 "TREE tree1 = (E:0.5,C:0.5,D:0.5):0.0;",
@@ -103,7 +103,7 @@ public class LassoTest {
         };
         //Trim whitespace from outputlines
         outputLines = outputLines.stream().map(String::trim).collect(Collectors.toList());
-        //Check strong lasso matches what is expected
+        //Check strong rooted matches what is expected
         long matched = Stream.of(expectedLasso).filter(outputLines::contains).count();
         assertEquals(expectedLasso.length, matched);
         //Check tree is isomorphically equivalent to what is expected
@@ -112,7 +112,7 @@ public class LassoTest {
         //Check the same for tree containing A, B
         String[] expectedLasso2 = { "[A -> B, 1.0]" };
         String[] expectedNewicks2 = { "TREE tree2 = (A:0.5,B:0.5):0.0;", "TREE tree2 = (B:0.5,A:0.5):0.0;" };
-        //Check strong lasso matches what is expected
+        //Check strong rooted matches what is expected
         matched = Stream.of(expectedLasso2).filter(outputLines::contains).count();
         assertEquals(expectedLasso2.length, matched);
         //Check tree isomorphically equivalent to what is expected
@@ -123,20 +123,20 @@ public class LassoTest {
     @Test
     public void run3() throws IOException {
         //As test 1, but with BronKerbosch clique finder
-        File input = FileUtils.toFile(LassoTest.class.getResource("/example-mod.nex"));
+        File input = FileUtils.toFile(RootedLassoTest.class.getResource("/example-mod.nex"));
         File output = new File(folder.getRoot(), "output.nex");
-        LassoOptions options = new LassoOptions();
+        RootedLassoOptions options = new RootedLassoOptions();
         options.setInput(input);
         options.setOutput(output);
         options.setCliqueFinder(CliqueFinderFactory.BRONKERBOSCH);
-        Lasso lasso = new Lasso(options);
+        RootedLasso lasso = new RootedLasso(options);
         lasso.run();
         //Check that the output file exists
         assertTrue(output.exists());
         List<String> outputLines = FileUtils.readLines(output, "UTF-8");
         //Check file is not empty
         assertTrue(!outputLines.isEmpty());
-        //Check strong lasso is as expected
+        //Check strong rooted is as expected
         String[] expectedLasso = {  "[B -> E, 6.0]",  "[B -> D, 2.0]", "[C -> D, 2.0]", "[A -> D, 4.0]", "[B -> C, 2.0]" };
         String[] expectedNewicks = {
                 "TREE tree1 = (((B:1.0,C:1.0,D:1.0):1.0,A:2.0):1.0,E:3.0):0.0;",
@@ -148,7 +148,7 @@ public class LassoTest {
         };
         //Trim whitespace from outputlines
         outputLines = outputLines.stream().map(String::trim).collect(Collectors.toList());
-        //Check strong lasso matches what is expected
+        //Check strong rooted matches what is expected
         long matched = Stream.of(expectedLasso).filter(outputLines::contains).count();
         assertEquals(expectedLasso.length, matched);
         //Check tree is isomorphically equivalent to what is expected

@@ -13,7 +13,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;
+package uk.ac.uea.cmp.spectre.lasso.rooted;
 import org.apache.commons.lang3.tuple.Pair;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
@@ -29,7 +29,7 @@ public class HeuristicCliqueFinder extends CliqueFinder {
     private double minWeight;
     private Map<Pair<Identifier, Identifier>, Double> distancesUsed;
 
-    public HeuristicCliqueFinder(LassoOptions options) {
+    public HeuristicCliqueFinder(RootedLassoOptions options) {
         super(options);
         this.neighbours = new HashMap<>();
         this.visited = new HashSet<>();
@@ -37,9 +37,9 @@ public class HeuristicCliqueFinder extends CliqueFinder {
 
     /**
      * Find maximal clique starting with an arbitrary edge in the graph, and attempting to add vertices.
-     * uk.ac.uea.cmp.spectre.lasso.lasso.LassoOptions defines a number of times to attempt growing a clique.
+     * uk.ac.uea.cmp.spectre.rooted.rooted.RootedLassoOptions defines a number of times to attempt growing a clique.
      * Largest clique located is returned, ties broken randomly.
-     * @param graph Graph to search in. For uk.ac.uea.cmp.spectre.lasso.lasso.Lasso, delete all non-minimal edgeweights first.
+     * @param graph Graph to search in. For uk.ac.uea.cmp.spectre.rooted.rooted.RootedLasso, delete all non-minimal edgeweights first.
      * @return Largest located clique
      */
     @Override
@@ -161,7 +161,7 @@ public class HeuristicCliqueFinder extends CliqueFinder {
         //For testing private methods
         double[][] matrix = new double[][] { {0, 2, 2, 0, 0}, {2, 0, 2, 0, 0}, {2, 2, 0, 0, 0}, {0, 0, 0, 0, 4}, {0, 0, 0, 4, 0}};
         LassoDistanceGraph simpleGraph = new LassoDistanceGraph(new FlexibleDistanceMatrix(matrix));
-        HeuristicCliqueFinder h = new HeuristicCliqueFinder(new LassoOptions());
+        HeuristicCliqueFinder h = new HeuristicCliqueFinder(new RootedLassoOptions());
         h.graph = simpleGraph;
         Set<Identifier> connected = h.connectedVertices((Pair<Identifier, Identifier>)simpleGraph.getMap().keySet().toArray()[3]);
         System.out.println(connected);

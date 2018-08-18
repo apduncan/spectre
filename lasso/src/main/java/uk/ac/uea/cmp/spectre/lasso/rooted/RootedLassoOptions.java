@@ -13,14 +13,12 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;
-import uk.ac.uea.cmp.spectre.lasso.lasso.CliqueFinderFactory;
-import uk.ac.uea.cmp.spectre.lasso.lasso.DistanceUpdaterFactory;
+package uk.ac.uea.cmp.spectre.lasso.rooted;
 
 import java.io.File;
 
 
-public class LassoOptions {
+public class RootedLassoOptions {
     final public static int DEFAULT_LASSO_RUNS = 10;
     final public static int DEFAULT_CLIQUE_ATTEMPTS = 10;
     final public static DistanceUpdaterFactory DEFAULT_DISTANCE_UPDATER = DistanceUpdaterFactory.MODAL;
@@ -28,7 +26,7 @@ public class LassoOptions {
     final public static String DESC_INPUT = "A Nexus or Phylip formatted file containing a distance matrix. Missing" +
             "values should be represented by ?.";
     final public static String DESC_OUTPUT = "File to write constructed trees to. Output will be in Nexus format.";
-    final public static String DESC_LASSO_RUNS = "Number of times to run Lasso algorithm. The run which produces the " +
+    final public static String DESC_LASSO_RUNS = "Number of times to run RootedLasso algorithm. The run which produces the " +
             "tree containing the greatest number of taxa is used as the final result.";
     final public static String DESC_CLIQUE_ATTEMPTS = "The number of times to attempt to find a maximal clique. Only " +
             "relevant when using the heuristic clique finding method.";
@@ -44,7 +42,7 @@ public class LassoOptions {
     private File input;
     private File output;
 
-    public LassoOptions() {
+    public RootedLassoOptions() {
         //initialise with defaults
         this.cliqueAttempts = this.DEFAULT_CLIQUE_ATTEMPTS;
         this.lassoRuns = this.DEFAULT_LASSO_RUNS;
@@ -54,8 +52,8 @@ public class LassoOptions {
         this.output = null;
     }
 
-    public LassoOptions(int lassoRuns, int cliqueAttempts, CliqueFinderFactory cliqueFinder,
-                        DistanceUpdaterFactory updater, File input, File output) {
+    public RootedLassoOptions(int lassoRuns, int cliqueAttempts, CliqueFinderFactory cliqueFinder,
+                              DistanceUpdaterFactory updater, File input, File output) {
         this.cliqueAttempts = cliqueAttempts;
         this.lassoRuns = lassoRuns;
         this.cliqueFinder = cliqueFinder;

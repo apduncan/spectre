@@ -13,21 +13,17 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;
+package uk.ac.uea.cmp.spectre.lasso.rooted;
 
-public enum CliqueFinderFactory {
-    HEURISTIC {
+public enum DistanceUpdaterFactory {
+    MODAL {
         @Override
-        public CliqueFinder get(LassoOptions options) {
-            return new HeuristicCliqueFinder(options);
-        }
-    },
-    BRONKERBOSCH {
-        @Override
-        public CliqueFinder get(LassoOptions options) {
-            return new BKCliqueFinder(options);
+        public DistanceUpdater get(RootedLassoOptions options) {
+            return new ModalDistanceUpdater(options);
         }
     };
 
-    public abstract CliqueFinder get(LassoOptions options);
+    private RootedLassoOptions options;
+
+    public abstract DistanceUpdater get(RootedLassoOptions options);
 }

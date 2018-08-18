@@ -53,16 +53,16 @@ public class UnrootedLassoTest {
     @Test
     public void run() throws IOException {
         //Create a random matrix
-        DistanceMatrix matrix = new RandomDistanceGenerator().generateDistances(100);
+        DistanceMatrix matrix = new RandomDistanceGenerator().generateDistances(30);
         //Delete random 20%
-        matrix = deleteRandom(matrix, 10);
+        matrix = deleteRandom(matrix, 20);
         //Save out
         File input = folder.newFile("random.nex");
         File output = folder.newFile("output.nex");
         NexusWriter writer = new NexusWriter();
         writer.writeDistanceMatrix(input, matrix);
-        //Run unrooted lasso on this random file
-        UnrootedLassoOptions options = new UnrootedLassoOptions(input, output, ChordalSubgraphFinder.SEED_TREE.BREADTH);
+        //Run unrooted rooted on this random file
+        UnrootedLassoOptions options = new UnrootedLassoOptions(input, output);
         UnrootedLasso lasso = new UnrootedLasso(options);
         lasso.run();
         //Check output file exists
@@ -72,12 +72,12 @@ public class UnrootedLassoTest {
         assertTrue(outputLines.size() > 0);
         //Check it is complete
         FlexibleDistanceMatrix outputMatrix = new FlexibleDistanceMatrix(new NexusReader().readDistanceMatrix(output));
-        assertEquals(outputMatrix.getMap().values().stream().filter(val -> val != 0).count(), (30*29)/2, 0.001);
+        assertEquals(outputMatrix.getMap().values().stream().filter(val -> val != 0).count(), (outputMatrix.getTaxa().size()*(outputMatrix.getTaxa().size()-1))/2, 0.001);
     }
 
     @Test
     public void run_additive() throws IOException {
-        //TODO: This does not contain a stable triplet cover, just a triplet cover that happens to be shellable
+        // This does not contain a stable triplet cover, just a triplet cover that happens to be shellable
         File input = FileUtils.toFile(UnrootedLassoTest.class.getResource("/ex-additive-diamonds.nex"));
         File output = folder.newFile("output_additive.nex");
         UnrootedLassoOptions options = new UnrootedLassoOptions(input, output);
@@ -97,42 +97,6 @@ public class UnrootedLassoTest {
         final double[][] derived = fileContents.getDistanceMatrix().getMatrix(Comparator.comparing(Identifier::getName));
         for(int i = 0; i < expected.length; i++) {
             assertArrayEquals(expected[i], derived[i], 0.01);
-        }
-    }
-
-    @Test
-    public void run_large_additive() throws IOException {
-        File input = FileUtils.toFile(UnrootedLassoTest.class.getResource("/macaque-additive-integer.nex"));
-        File random = folder.newFile("random.nex");
-        File output = folder.newFile("output_an_additive.nex");
-        random_integers(random, 20);
-//        input = random;
-        //Delete some of the values in additive matrix
-        DistanceMatrix partial = deleteRandom(new NexusReader().readDistanceMatrix(input), 10);
-        File inputPartial = folder.newFile("partial.nex");
-        new NexusWriter().writeDistanceMatrix(inputPartial, partial);
-        UnrootedLassoOptions options = new UnrootedLassoOptions(inputPartial, output);
-        UnrootedLasso lasso = new UnrootedLasso(options);
-        lasso.run();
-        //Check output file exists
-        assertTrue(output.exists());
-        //Check not empty
-        List<String> outLines = FileUtils.readLines(output, "UTF-8");
-        assertTrue(outLines.size() > 0);
-        //Check this does contain the full tree metric
-        //Load matrix
-        Nexus fileContents = new NexusReader().parse(output);
-        //Compare matrix to expected
-        Nexus original = new NexusReader().parse(input);
-        DistanceMatrix derived = fileContents.getDistanceMatrix();
-//        List<Pair<Identifier, Identifier>> zeros = derived.getMap().entrySet().stream().filter(val -> val.getValue() == 0).map(val -> val.getKey()).collect(Collectors.toList());
-//        assertEquals(0, zeros.size());
-//        assertEquals(derived.getMap().values().stream().filter(val -> val != 0).count(), (derived.getTaxa().size() * (derived.getTaxa().size() -1))/2, 0.001);
-        for(Map.Entry<Pair<Identifier, Identifier>, Double> entry: derived.getMap().entrySet()) {
-            double dist = original.getDistanceMatrix().getDistance(entry.getKey().getRight().getName(), entry.getKey().getLeft().getName());
-            if(original.getDistanceMatrix().getDistance(entry.getKey().getRight().getName(), entry.getKey().getLeft().getName()) != entry.getValue())
-                System.out.println(entry + " | " + original.getDistanceMatrix().getDistance(entry.getKey().getRight().getName(), entry.getKey().getLeft().getName()));
-//            assertEquals(original.getDistanceMatrix().getDistance(entry.getKey().getRight().getName(), entry.getKey().getLeft().getName()), entry.getValue(), 0.001);
         }
     }
 

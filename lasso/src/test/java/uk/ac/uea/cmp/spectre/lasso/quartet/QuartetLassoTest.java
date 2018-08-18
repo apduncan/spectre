@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import uk.ac.uea.cmp.spectre.lasso.LassoQuartetsTest;
+import uk.ac.uea.cmp.spectre.lasso.LassoShellingTest;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +47,7 @@ public class QuartetLassoTest {
     public void run1() throws IOException {
         //Make some options
         QuartetLassoOptions options = new QuartetLassoOptions();
-        options.setInput(FileUtils.toFile(LassoQuartetsTest.class.getResource("/ex-additive-diamonds.nex")));
+        options.setInput(FileUtils.toFile(LassoShellingTest.class.getResource("/ex-additive-diamonds.nex")));
         //Input tree is
         // 1 _    _ 3
         //    \__/

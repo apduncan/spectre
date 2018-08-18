@@ -13,7 +13,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;
+package uk.ac.uea.cmp.spectre.lasso.rooted;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.tree.newick.NewickNode;
 import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
@@ -24,9 +24,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public abstract class DistanceUpdater {
-    private LassoOptions options;
+    private RootedLassoOptions options;
 
-    public DistanceUpdater(LassoOptions options) {
+    public DistanceUpdater(RootedLassoOptions options) {
         this.options = options;
     }
 

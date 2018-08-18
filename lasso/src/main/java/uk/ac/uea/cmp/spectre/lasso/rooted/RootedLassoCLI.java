@@ -13,7 +13,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;
+package uk.ac.uea.cmp.spectre.lasso.rooted;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -26,8 +26,8 @@ import uk.ac.uea.cmp.spectre.core.util.LogConfig;
 import java.io.File;
 import java.io.IOException;
 
-public class LassoCLI {
-    private static Logger log = LoggerFactory.getLogger(LassoCLI.class);
+public class RootedLassoCLI {
+    private static Logger log = LoggerFactory.getLogger(RootedLassoCLI.class);
 
     public static final String OPT_OUTPUT = "output_file";
     public static final String OPT_LASSO_RUNS= "lasso_runs";
@@ -41,19 +41,19 @@ public class LassoCLI {
         Options options = new Options();
 
         options.addOption(OptionBuilder.withArgName("output").withLongOpt(OPT_OUTPUT).hasArg()
-                .withDescription(LassoOptions.DESC_OUTPUT).create("o"));
+                .withDescription(RootedLassoOptions.DESC_OUTPUT).create("o"));
 
         options.addOption(OptionBuilder.withArgName("runs").withLongOpt(OPT_LASSO_RUNS).hasArg()
-                .withDescription(LassoOptions.DESC_LASSO_RUNS).create("r"));
+                .withDescription(RootedLassoOptions.DESC_LASSO_RUNS).create("r"));
 
         options.addOption(OptionBuilder.withArgName("cattempts").withLongOpt(OPT_CLIQUE_ATTEMPTS).hasArg()
-                .withDescription(LassoOptions.DESC_CLIQUE_ATTEMPTS).create("a"));
+                .withDescription(RootedLassoOptions.DESC_CLIQUE_ATTEMPTS).create("a"));
 
         options.addOption(OptionBuilder.withLongOpt(OPT_DISTANCE_UPDATER).hasArg()
-                .withDescription(LassoOptions.DESC_DISTANCE_UPDATER).create("du"));
+                .withDescription(RootedLassoOptions.DESC_DISTANCE_UPDATER).create("du"));
 
         options.addOption(OptionBuilder.withLongOpt(OPT_CLIQUE_FINDER).hasArg()
-                .withDescription(LassoOptions.DESC_CLIQUE_FINDER).create("cf"));
+                .withDescription(RootedLassoOptions.DESC_CLIQUE_FINDER).create("cf"));
 
         options.addOption(CommandLineHelper.HELP_OPTION);
 
@@ -64,7 +64,7 @@ public class LassoCLI {
     public static void main(String[] args) {
 
         CommandLine commandLine = new CommandLineHelper().startApp(createOptions(),
-                "lasso [options] <distance_matrix_file>",
+                "rooted [options] <distance_matrix_file>",
                 "Creates an equidistant tree from a distance matrix. The input matrix can have missing" +
                         "values. The tree is created from a subset of the input distances, where this subset has only " +
                         "one possible tree representation.\n" +
@@ -90,7 +90,7 @@ public class LassoCLI {
             }
 
             String prefix = "netmake";
-            File output = new File("./lasso-output.nex");
+            File output = new File("./rooted-output.nex");
             if (commandLine.hasOption(OPT_OUTPUT)) {
                 output = new File(commandLine.getOptionValue(OPT_OUTPUT));
             }
@@ -102,7 +102,7 @@ public class LassoCLI {
             }
 
             File input = new File(commandLine.getArgs()[0]);
-            LassoOptions options = new LassoOptions();
+            RootedLassoOptions options = new RootedLassoOptions();
             //Set options
             options.setInput(input);
             options.setOutput(output);
@@ -127,8 +127,8 @@ public class LassoCLI {
                 }
             }
 
-            // Run Lasso
-            new Lasso(options).run();
+            // Run RootedLasso
+            new RootedLasso(options).run();
 
         } catch (Exception e) {
             System.err.println(e.getMessage());

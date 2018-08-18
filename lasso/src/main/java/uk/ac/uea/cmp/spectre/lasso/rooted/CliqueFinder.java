@@ -13,17 +13,25 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;
+package uk.ac.uea.cmp.spectre.lasso.rooted;
+import uk.ac.uea.cmp.spectre.core.ds.Identifier;
+import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
 
-public enum DistanceUpdaterFactory {
-    MODAL {
-        @Override
-        public DistanceUpdater get(LassoOptions options) {
-            return new ModalDistanceUpdater(options);
-        }
-    };
+import java.util.Set;
 
-    private LassoOptions options;
+public abstract class CliqueFinder {
+    private RootedLassoOptions options;
+    public CliqueFinder(RootedLassoOptions options) {
+        this.options = options;
+    }
 
-    public abstract DistanceUpdater get(LassoOptions options);
+    public abstract Set<Identifier> find(LassoDistanceGraph graph);
+
+    public RootedLassoOptions getOptions() {
+        return options;
+    }
+
+    public void setOptions(RootedLassoOptions options) {
+        this.options = options;
+    }
 }

@@ -26,7 +26,7 @@ import uk.ac.uea.cmp.spectre.core.io.nexus.Nexus;
 import uk.ac.uea.cmp.spectre.core.io.nexus.NexusReader;
 import uk.ac.uea.cmp.spectre.core.ui.gui.RunnableTool;
 import uk.ac.uea.cmp.spectre.core.ui.gui.StatusTracker;
-import uk.ac.uea.cmp.spectre.lasso.LassoQuartets;
+import uk.ac.uea.cmp.spectre.lasso.LassoShelling;
 
 import java.io.IOException;
 
@@ -73,7 +73,7 @@ public class QuartetLasso extends RunnableTool {
                 throw new IOException("Could not find distance matrix in input");
 
             this.notifyUser("Loaded distance matrix containing " + matrix.size() + " taxa");
-            this.notifyUser("Executing Quartet Lasso");
+            this.notifyUser("Executing Quartet RootedLasso");
             QuartetLassoResult result = this.execute(matrix);
             this.notifyUser("Saving results to disk");
             result.save(this.options.getOutput());
@@ -91,9 +91,9 @@ public class QuartetLasso extends RunnableTool {
     private QuartetLassoResult execute(DistanceMatrix input) {
         //Infer any missing distances which are possible
         this.notifyUser("Inferring missing distances");
-        DistanceMatrix shelled = new LassoQuartets(input).altEnrichMatrix();
+        DistanceMatrix shelled = new LassoShelling(input).altShell();
         this.notifyUser("Generating quartet block");
-        StringBuilder quartetBlock = new LassoQuartets(shelled).getQuartetsAsString(this.getOptions().isWeighted());
+        StringBuilder quartetBlock = new LassoShelling(shelled).getQuartetsAsString(this.getOptions().isWeighted());
         return new QuartetLassoResult(quartetBlock, shelled);
     }
 

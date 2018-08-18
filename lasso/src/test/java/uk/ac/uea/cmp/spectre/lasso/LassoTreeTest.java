@@ -96,7 +96,7 @@ public class LassoTreeTest {
 
     @Test
     public void identifierConstructor() {
-        Identifier id = new Identifier("uk.ac.uea.cmp.spectre.lasso.Test", 1);
+        Identifier id = new Identifier("uk.ac.uea.cmp.spectre.rooted.Test", 1);
         LassoTree tree = new LassoTree(id);
 
         //Check taxon in tree is the same reference as one passed in

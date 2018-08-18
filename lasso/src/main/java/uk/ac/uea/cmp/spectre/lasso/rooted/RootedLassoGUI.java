@@ -13,7 +13,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;
+package uk.ac.uea.cmp.spectre.lasso.rooted;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,14 +27,14 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 
-public class LassoGUI extends JFrame implements ToolHost {
+public class RootedLassoGUI extends JFrame implements ToolHost {
     // UI designed using NetBeans form designer
     // IntelliJ form designer generates code which is IntelliJ speicific, NetBeans generate standard Java class
 
     /**
-     * Creates new form uk.ac.uea.cmp.spectre.lasso.lasso.LassoGUI
+     * Creates new form uk.ac.uea.cmp.spectre.rooted.rooted.RootedLassoGUI
      */
-    public LassoGUI() {
+    public RootedLassoGUI() {
         initComponents();
         initTooltips();
         try {
@@ -43,7 +43,7 @@ public class LassoGUI extends JFrame implements ToolHost {
             log.debug("Could not load logo");
         }
         tracker = new StatusTracker(prgProgress, lblProgress);
-        runner = new LassoRunner(this);
+        runner = new RootedLassoRunner(this);
     }
 
     /**
@@ -78,7 +78,7 @@ public class LassoGUI extends JFrame implements ToolHost {
         lblProgress = new javax.swing.JLabel();
 
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("Lasso");
+        setTitle("RootedLasso");
 
         pnlClique.setBorder(javax.swing.BorderFactory.createTitledBorder("Clique Options"));
         pnlClique.setToolTipText("");
@@ -211,7 +211,7 @@ public class LassoGUI extends JFrame implements ToolHost {
                                 .addComponent(lblDistanceAlg))
         );
 
-        pnlLasso.setBorder(javax.swing.BorderFactory.createTitledBorder("Lasso Options"));
+        pnlLasso.setBorder(javax.swing.BorderFactory.createTitledBorder("RootedLasso Options"));
 
         lblRuns.setText("Runs");
 
@@ -289,7 +289,7 @@ public class LassoGUI extends JFrame implements ToolHost {
         fc.setDialogTitle("Input matrix");
         fc.setFileSelectionMode(JFileChooser.OPEN_DIALOG);
         if (evt.getSource() == btnInput) {
-            int returnVal = fc.showOpenDialog(LassoGUI.this);
+            int returnVal = fc.showOpenDialog(RootedLassoGUI.this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fc.getSelectedFile();
                 String z = file.getAbsolutePath();
@@ -305,7 +305,7 @@ public class LassoGUI extends JFrame implements ToolHost {
         fc.setDialogTitle("Output");
         fc.addChoosableFileFilter(new FileNameExtensionFilter("Nexus", "nex"));
         if (evt.getSource() == btnOutput) {
-            int returnVal = fc.showSaveDialog(LassoGUI.this);
+            int returnVal = fc.showSaveDialog(RootedLassoGUI.this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fc.getSelectedFile();
                 String z = file.getAbsolutePath();
@@ -335,7 +335,7 @@ public class LassoGUI extends JFrame implements ToolHost {
         try {
             runs = Integer.class.cast(snprRuns.getValue());
         } catch (Exception e) {
-            showErrorDialog("Number of Lasso runs invalid");
+            showErrorDialog("Number of RootedLasso runs invalid");
             return;
         }
         if(runs < 1 || attempts < 1) {
@@ -358,8 +358,8 @@ public class LassoGUI extends JFrame implements ToolHost {
             return;
         }
 
-        // Create LassoOptions object
-        LassoOptions options = new LassoOptions();
+        // Create RootedLassoOptions object
+        RootedLassoOptions options = new RootedLassoOptions();
         options.setInput(input);
         options.setOutput(output);
         options.setLassoRuns(runs);
@@ -367,7 +367,7 @@ public class LassoGUI extends JFrame implements ToolHost {
         options.setCliqueFinder(finder);
         options.setUpdater(updater);
 
-        // Execute Lasso
+        // Execute RootedLasso
         runner.runLasso(options, tracker);
     }
 
@@ -398,20 +398,20 @@ public class LassoGUI extends JFrame implements ToolHost {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(LassoGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(RootedLassoGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(LassoGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(RootedLassoGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(LassoGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(RootedLassoGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(LassoGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(RootedLassoGUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
         LogConfig.defaultConfig();
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new LassoGUI().setVisible(true);
+                new RootedLassoGUI().setVisible(true);
             }
         });
     }
@@ -427,19 +427,19 @@ public class LassoGUI extends JFrame implements ToolHost {
     }
 
     private void initTooltips() {
-        //Set up tooltips on some elements based on LassoOptions
-        lblCliqueAlg.setToolTipText(LassoOptions.DESC_CLIQUE_FINDER);
-        cmbCliqueAlg.setToolTipText(LassoOptions.DESC_CLIQUE_FINDER);
-        lblDistanceAlg.setToolTipText(LassoOptions.DESC_DISTANCE_UPDATER);
-        cmbDistanceAlg.setToolTipText(LassoOptions.DESC_DISTANCE_UPDATER);
-        lblCliqueAttempt.setToolTipText(LassoOptions.DESC_CLIQUE_ATTEMPTS);
-        spnrCliqueAttempts.setToolTipText(LassoOptions.DESC_CLIQUE_ATTEMPTS);
-        lblInput.setToolTipText(LassoOptions.DESC_INPUT);
-        txtInput.setToolTipText(LassoOptions.DESC_INPUT);
-        txtOutput.setToolTipText(LassoOptions.DESC_OUTPUT);
-        lblOutput.setToolTipText(LassoOptions.DESC_OUTPUT);
-        lblRuns.setToolTipText(LassoOptions.DESC_LASSO_RUNS);
-        snprRuns.setToolTipText(LassoOptions.DESC_LASSO_RUNS);
+        //Set up tooltips on some elements based on RootedLassoOptions
+        lblCliqueAlg.setToolTipText(RootedLassoOptions.DESC_CLIQUE_FINDER);
+        cmbCliqueAlg.setToolTipText(RootedLassoOptions.DESC_CLIQUE_FINDER);
+        lblDistanceAlg.setToolTipText(RootedLassoOptions.DESC_DISTANCE_UPDATER);
+        cmbDistanceAlg.setToolTipText(RootedLassoOptions.DESC_DISTANCE_UPDATER);
+        lblCliqueAttempt.setToolTipText(RootedLassoOptions.DESC_CLIQUE_ATTEMPTS);
+        spnrCliqueAttempts.setToolTipText(RootedLassoOptions.DESC_CLIQUE_ATTEMPTS);
+        lblInput.setToolTipText(RootedLassoOptions.DESC_INPUT);
+        txtInput.setToolTipText(RootedLassoOptions.DESC_INPUT);
+        txtOutput.setToolTipText(RootedLassoOptions.DESC_OUTPUT);
+        lblOutput.setToolTipText(RootedLassoOptions.DESC_OUTPUT);
+        lblRuns.setToolTipText(RootedLassoOptions.DESC_LASSO_RUNS);
+        snprRuns.setToolTipText(RootedLassoOptions.DESC_LASSO_RUNS);
     }
 
     @Override
@@ -456,13 +456,13 @@ public class LassoGUI extends JFrame implements ToolHost {
     public void showErrorDialog(String message) {
         JOptionPane.showMessageDialog(this,
                 message,
-                "Lasso Error",
+                "RootedLasso Error",
                 JOptionPane.ERROR_MESSAGE);
     }
 
-    private static Logger log = LoggerFactory.getLogger(Lasso.class);
+    private static Logger log = LoggerFactory.getLogger(RootedLasso.class);
     private StatusTracker tracker;
-    private LassoRunner runner;
+    private RootedLassoRunner runner;
     // Variables declaration - do not modify
     private javax.swing.JButton btnExecute;
     private javax.swing.JButton btnInput;

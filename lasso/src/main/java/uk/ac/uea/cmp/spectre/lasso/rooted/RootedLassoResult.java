@@ -13,7 +13,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;import org.apache.commons.lang3.tuple.Pair;
+package uk.ac.uea.cmp.spectre.lasso.rooted;import org.apache.commons.lang3.tuple.Pair;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.IdentifierList;
 import uk.ac.uea.cmp.spectre.core.io.nexus.NexusWriter;
@@ -24,11 +24,11 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class LassoResult {
+public class RootedLassoResult {
     private List<LassoTree> trees;
     private Map<Pair<Identifier, Identifier>, Double> distancesUsed;
 
-    public LassoResult(List<LassoTree> trees, Map<Pair<Identifier, Identifier>, Double> distancesUsed) {
+    public RootedLassoResult(List<LassoTree> trees, Map<Pair<Identifier, Identifier>, Double> distancesUsed) {
         this.trees = trees;
         //ensure trees have all internal taxa removed
         this.trees.stream().forEach(tree -> tree.removeInternalIdentifier());
@@ -47,7 +47,7 @@ public class LassoResult {
     }
 
     /**
-     * Write the tree and corresponding strong lasso (if update methods permits) to disk, in Nexus format.
+     * Write the tree and corresponding strong rooted (if update methods permits) to disk, in Nexus format.
      * @param output File to write to
      * @throws IOException
      */
@@ -68,8 +68,8 @@ public class LassoResult {
         int treeNum = 1;
         for(LassoTree tree : this.getTrees()) {
             writer.appendLine("  TREE tree" + treeNum++ + " = " + tree.toString() + ";");
-            //Writer the strong lasso in comments
-            writer.appendLine("  [Strong Lasso shown below. Cord between taxa a and b with associated weight 4 written a -> b, 4]");
+            //Writer the strong rooted in comments
+            writer.appendLine("  [Strong RootedLasso shown below. Cord between taxa a and b with associated weight 4 written a -> b, 4]");
             this.getDistancesUsed(tree).entrySet().stream()
                     .map(entry -> "  [" + entry.getKey().getLeft().getName() + " -> " + entry.getKey().getRight().getName() + ", " + entry.getValue().toString() + "]")
                     .forEach(writer::appendLine);

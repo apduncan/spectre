@@ -13,25 +13,21 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;
-import uk.ac.uea.cmp.spectre.core.ds.Identifier;
-import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
+package uk.ac.uea.cmp.spectre.lasso.rooted;
 
-import java.util.Set;
+public enum CliqueFinderFactory {
+    HEURISTIC {
+        @Override
+        public CliqueFinder get(RootedLassoOptions options) {
+            return new HeuristicCliqueFinder(options);
+        }
+    },
+    BRONKERBOSCH {
+        @Override
+        public CliqueFinder get(RootedLassoOptions options) {
+            return new BKCliqueFinder(options);
+        }
+    };
 
-public abstract class CliqueFinder {
-    private LassoOptions options;
-    public CliqueFinder(LassoOptions options) {
-        this.options = options;
-    }
-
-    public abstract Set<Identifier> find(LassoDistanceGraph graph);
-
-    public LassoOptions getOptions() {
-        return options;
-    }
-
-    public void setOptions(LassoOptions options) {
-        this.options = options;
-    }
+    public abstract CliqueFinder get(RootedLassoOptions options);
 }

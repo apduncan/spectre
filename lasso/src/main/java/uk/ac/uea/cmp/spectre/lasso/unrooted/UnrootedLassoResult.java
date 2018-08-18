@@ -17,6 +17,7 @@ package uk.ac.uea.cmp.spectre.lasso.unrooted;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.io.nexus.NexusWriter;
 import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
@@ -25,21 +26,16 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class UnrootedLassoResult {
-    //Map of quartet cover consituting a strong lasso -> the tree metric lassoed
-    private List<Pair<LassoDistanceGraph, DistanceMatrix>> results;
+    //Map of quartet cover consituting a strong rooted -> the tree metric lassoed
+    private DistanceMatrix tree;
+    private Set<Pair<Identifier, Identifier>> lasso;
 
     public UnrootedLassoResult() {
-        this.results = new ArrayList<>();
-    }
-
-    public void addResult(LassoDistanceGraph lasso, DistanceMatrix treeMetric) {
-        this.results.add(new ImmutablePair<>(lasso, treeMetric));
-    }
-
-    public List<Pair<LassoDistanceGraph, DistanceMatrix>> getResults() {
-        return this.results;
+        this.tree = null;
+        this.lasso = null;
     }
 
     /**
@@ -49,38 +45,35 @@ public class UnrootedLassoResult {
      *             preserving this naming format.
      */
     public void save(File file) throws IOException {
-        if(this.results.size() == 1) {
-            //Write a single file
-            writeResult(this.results.get(0), file);
-        } else {
-            //Write multiple files
-            //iterate over all results
-            final String prefix = file.toString().substring(0, file.toString().length() - 4);
-            final String suffix = ".nex";
-            int sequence = 1;
-            for(Pair<LassoDistanceGraph, DistanceMatrix> result : this.results) {
-                File suffixedFile = new File(prefix + "_" + result.getLeft().getTaxa().size() + "_" + sequence + suffix);
-                writeResult(result, suffixedFile);
-                sequence++;
-            }
-        }
-    }
-
-    private void writeResult(Pair<LassoDistanceGraph, DistanceMatrix> result, File file) throws IOException {
+        if(this.tree == null || this.lasso == null)
+            throw new NullPointerException("No result to write");
         NexusWriter writer = new NexusWriter();
-        LassoDistanceGraph lasso = result.getLeft();
-        DistanceMatrix treeMetric = result.getRight();
         writer.appendHeader();
-        writer.append(treeMetric.getTaxa());
+        writer.append(this.tree.getTaxa());
         writer.appendLine();
-        writer.append(treeMetric);
-        //Record the lasso as comments
-        writer.append("[Below is the strong lasso for the tree metric given in Distances block]");
-        lasso.getMap().entrySet().stream()
-                .filter(e -> e.getValue() > 0)
-                .map(entry -> "[" + entry.getKey().getRight().getName() + " -> " + entry.getKey().getLeft().getName() +
-                ", " + entry.getValue().toString() + "]")
+        writer.append(this.tree);
+        //Record the rooted as comments
+        writer.append("[Below is the strong rooted for the tree metric given in Distances block]");
+        this.lasso.stream()
+                .map(entry -> "[" + entry.getRight().getName() + " -> " + entry.getLeft().getName() +
+                ", " + this.tree.getDistance(entry.getRight().getName(), entry.getLeft().getName()) + "]")
                 .forEach(s -> writer.appendLine(s));
         writer.write(file);
+    }
+
+    public DistanceMatrix getTree() {
+        return tree;
+    }
+
+    public void setTree(DistanceMatrix tree) {
+        this.tree = tree;
+    }
+
+    public Set<Pair<Identifier, Identifier>> getLasso() {
+        return lasso;
+    }
+
+    public void setLasso(Set<Pair<Identifier, Identifier>> lasso) {
+        this.lasso = lasso;
     }
 }

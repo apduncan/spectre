@@ -20,25 +20,17 @@ import java.io.File;
 public class UnrootedLassoOptions {
     private File input;
     private File output;
-    private ChordalSubgraphFinder.SEED_TREE seedTree;
     public static final String DESC_OUTPUT = "File to write result to. The output is a tree metric. The tree can be " +
-            "constructed using a method such as neighbour joining. If more than one tree is created, will output a " +
-            "tree metric for each in a separate file.";
-    public static final String DESC_SEED_TREE = "BREADTH or DEPTH. Method of build the spanning tree which is used as a starting point " +
-            "to build a chordal subgrapgh. Uses either a breadth or depth first search.";
+            "constructed using a method such as neighbour joining.";
+    //No options available for this algorithm yet - more will be required as developed further
 
-    public UnrootedLassoOptions(File input, File output, ChordalSubgraphFinder.SEED_TREE seedTree) {
+    public UnrootedLassoOptions(File input, File output) {
         this.input = input;
         this.output = output;
-        this.seedTree = seedTree;
     }
 
     public UnrootedLassoOptions() {
-        this(null, null, ChordalSubgraphFinder.SEED_DEFAULT);
-    }
-
-    public UnrootedLassoOptions(File input, File output) {
-        this(input, output, ChordalSubgraphFinder.SEED_DEFAULT);
+        this(null, null);
     }
 
     public File getOutput() {
@@ -55,13 +47,5 @@ public class UnrootedLassoOptions {
 
     public void setInput(File input) {
         this.input = input;
-    }
-
-    public ChordalSubgraphFinder.SEED_TREE getSeedTree() {
-        return seedTree;
-    }
-
-    public void setSeedTree(ChordalSubgraphFinder.SEED_TREE seedTree) {
-        this.seedTree = seedTree;
     }
 }

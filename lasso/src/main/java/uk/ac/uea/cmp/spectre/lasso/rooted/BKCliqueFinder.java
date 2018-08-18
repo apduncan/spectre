@@ -13,7 +13,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;
+package uk.ac.uea.cmp.spectre.lasso.rooted;
 
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
@@ -26,7 +26,7 @@ public class BKCliqueFinder extends CliqueFinder {
     private Map<Identifier, Set<Identifier>> neighbours;
     private Double minWeight;
 
-    public BKCliqueFinder(LassoOptions options) {
+    public BKCliqueFinder(RootedLassoOptions options) {
         super(options);
     }
 

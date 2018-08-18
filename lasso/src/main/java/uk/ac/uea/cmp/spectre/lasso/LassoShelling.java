@@ -20,7 +20,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.IdentifierList;
 import uk.ac.uea.cmp.spectre.core.ds.distance.DistanceMatrix;
-import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
 import uk.ac.uea.cmp.spectre.core.ds.quad.Quad;
 import uk.ac.uea.cmp.spectre.core.ds.quad.SpectreQuad;
 import uk.ac.uea.cmp.spectre.core.ds.quad.quartet.QuartetSystem;
@@ -32,14 +31,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class LassoQuartets {
+public class LassoShelling {
     private LassoDistanceGraph matrix;
     //Subsets for 4c2. Used in place of combination class for speed.
     private final static int[][] PAIRS_OF_QUAD = {{0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3}};
     //If two doubles vary by less than epsilon, they are considered equal
     //Floating point precision causes some problems with checking for skew cycles
 
-    public LassoQuartets(DistanceMatrix matrix) {
+    public LassoShelling(DistanceMatrix matrix) {
         this.matrix = new LassoDistanceGraph(matrix);
     }
 
@@ -50,12 +49,12 @@ public class LassoQuartets {
     /**
      * Add distances in the matrix by locating diamonds the graph of cords, where the missing distance is not between
      * two taxa forming a cherry. Continue doing so until no new cords and weights can be inferred. If the matrix is
-     * not a strong lasso, there could be multiple weights which could be inferred for a cord - the first possible
-     * weight encountered will be used. An alternate method, altEnrichMatrix, is available, which is faster but with
+     * not a strong rooted, there could be multiple weights which could be inferred for a cord - the first possible
+     * weight encountered will be used. An alternate method, altShell, is available, which is faster but with
      * higher memory use.
      * @return A matrix with as many cords and weights as possible inferred.
      */
-    public DistanceMatrix enrichMatrix() {
+    public DistanceMatrix shell() {
         long size = 0;
         do {
             size = matrix.getMap().values().stream().filter(distance -> distance > 0).count();
@@ -83,11 +82,11 @@ public class LassoQuartets {
     /**
      * Add distances in the matrix by locating diamonds the graph of cords, where the missing distance is not between
      * two taxa forming a cherry. Continue doing so until no new cords and weights can be inferred. If the matrix is
-     * not a strong lasso, there could be multiple weights which could be inferred for a cord - the first possible
-     * weight encountered will be used. A faster but more memory intensive method than enrichMatrix.
+     * not a strong rooted, there could be multiple weights which could be inferred for a cord - the first possible
+     * weight encountered will be used. A faster but more memory intensive method than shell.
      * @return A matrix with as many cords and weights as possible inferred.
      */
-    public DistanceMatrix altEnrichMatrix() {
+    public DistanceMatrix altShell() {
         //An edge between one or more candidateVertices could form part of a new diamond
         Set<Identifier> candidateVertices = new HashSet<>(matrix.getTaxa());
         long size = 0;
@@ -320,7 +319,7 @@ public class LassoQuartets {
      */
     private Quad getQuartet(IdentifierList quad) {
         //Check all distances are in matrix
-        for(int[] pair : LassoQuartets.PAIRS_OF_QUAD) {
+        for(int[] pair : LassoShelling.PAIRS_OF_QUAD) {
             if(matrix.getDistance(quad.get(pair[0]), quad.get(pair[1])) <= 0) {
                 return null;
             }

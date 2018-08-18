@@ -13,31 +13,31 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;import uk.ac.uea.cmp.spectre.core.ui.gui.StatusTracker;
+package uk.ac.uea.cmp.spectre.lasso.rooted;import uk.ac.uea.cmp.spectre.core.ui.gui.StatusTracker;
 import uk.ac.uea.cmp.spectre.core.ui.gui.ToolHost;
 import uk.ac.uea.cmp.spectre.core.ui.gui.ToolRunner;
 
-public class LassoRunner extends ToolRunner {
+public class RootedLassoRunner extends ToolRunner {
     /**
      * Initialises the ToolRunner
      *
      * @param host The host that's running this tool
      */
-    protected LassoRunner(ToolHost host) {
+    protected RootedLassoRunner(ToolHost host) {
         super(host);
     }
-    public Lasso getEngine() {
-        if (this.engine instanceof Lasso) {
-            Lasso m_engine = Lasso.class.cast(this.engine);
+    public RootedLasso getEngine() {
+        if (this.engine instanceof RootedLasso) {
+            RootedLasso m_engine = RootedLasso.class.cast(this.engine);
             return m_engine;
         }
 
         return null;
     }
 
-    public void runLasso(LassoOptions params, StatusTracker tracker) {
+    public void runLasso(RootedLassoOptions params, StatusTracker tracker) {
         try {
-            Lasso m_engine = new Lasso(params, tracker);
+            RootedLasso m_engine = new RootedLasso(params, tracker);
             this.run(m_engine);
         } catch (Exception ioe) {
             this.host.showErrorDialog(ioe.getMessage());

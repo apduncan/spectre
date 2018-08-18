@@ -32,8 +32,8 @@
                     <repositoryLayout>flat</repositoryLayout>
                     <programs>
                         <program>
-                            <mainClass>uk.ac.uea.cmp.spectre.lasso.lasso.LassoCLI</mainClass>
-                            <id>lasso</id>
+                            <mainClass>uk.ac.uea.cmp.spectre.lasso.rooted.RootedLassoCLI</mainClass>
+                            <id>rootedlasso</id>
                             <jvmSettings>
                                 <extraArguments>
                                     <extraArgument>-Djava.awt.headless=true</extraArgument>
@@ -78,7 +78,7 @@
                         </goals>
                         <configuration>
                             <target>
-                                <chmod file="${build-dir}/bin/lasso" perm="755" />
+                                <chmod file="${build-dir}/bin/rootedlasso" perm="755" />
                                 <chmod file="${build-dir}/bin/quartetlasso" perm="755" />
                                 <chmod file="${build-dir}/bin/unrootedlasso" perm="755" />
                             </target>

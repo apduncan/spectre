@@ -18,7 +18,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package uk.ac.uea.cmp.spectre.lasso.lasso;
+package uk.ac.uea.cmp.spectre.lasso.rooted;
 
 import uk.ac.uea.cmp.spectre.core.ui.gui.StatusTracker;
 import uk.ac.uea.cmp.spectre.core.ui.gui.ToolHost;
@@ -34,7 +34,7 @@ import java.util.stream.Stream;
  *
  * @author Anthony Duncan
  */
-public class EquidistantLassoGUIPanel extends javax.swing.JPanel implements LassoToolTab {
+public class RootedLassoGUIPanel extends javax.swing.JPanel implements LassoToolTab {
     public static javax.swing.DefaultComboBoxModel<String> cliqueAlgModel() {
         String[] opts = Arrays.stream(CliqueFinderFactory.values()).map(v -> v.toString()).toArray(String[]::new);
         return new javax.swing.DefaultComboBoxModel<>(opts);
@@ -45,9 +45,9 @@ public class EquidistantLassoGUIPanel extends javax.swing.JPanel implements Lass
         return new javax.swing.DefaultComboBoxModel<>(opts);
     }
     /**
-     * Creates new form EquidistantLassoGUIPanel
+     * Creates new form RootedLassoGUIPanel
      */
-    public EquidistantLassoGUIPanel() {
+    public RootedLassoGUIPanel() {
         initComponents();
         initTooltips();
         this.inputComponents = new Component[] {cmbDistanceAlg, cmbCliqueAlg, spnLassoRun, spnCliqueAttempts};
@@ -78,7 +78,7 @@ public class EquidistantLassoGUIPanel extends javax.swing.JPanel implements Lass
 
         lblCliqueAlg.setText("Algorithm");
 
-        cmbCliqueAlg.setModel(EquidistantLassoGUIPanel.cliqueAlgModel());
+        cmbCliqueAlg.setModel(RootedLassoGUIPanel.cliqueAlgModel());
 
         lblCliqueAttempts.setText("Attempts");
 
@@ -116,7 +116,7 @@ public class EquidistantLassoGUIPanel extends javax.swing.JPanel implements Lass
 
         lblDistanceAlg.setText("Algorithm");
 
-        cmbDistanceAlg.setModel(EquidistantLassoGUIPanel.distAlgModel());
+        cmbDistanceAlg.setModel(RootedLassoGUIPanel.distAlgModel());
 
         javax.swing.GroupLayout pnlDistanceLayout = new javax.swing.GroupLayout(pnlDistance);
         pnlDistance.setLayout(pnlDistanceLayout);
@@ -136,7 +136,7 @@ public class EquidistantLassoGUIPanel extends javax.swing.JPanel implements Lass
                 .addComponent(cmbDistanceAlg, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
-        pnlLasso.setBorder(javax.swing.BorderFactory.createTitledBorder("Lasso Options"));
+        pnlLasso.setBorder(javax.swing.BorderFactory.createTitledBorder("RootedLasso Options"));
 
         lblLassoRun.setText("Runs");
 
@@ -200,10 +200,10 @@ public class EquidistantLassoGUIPanel extends javax.swing.JPanel implements Lass
     private Component[] inputComponents;
 
     private void initTooltips() {
-        cmbCliqueAlg.setToolTipText(LassoOptions.DESC_CLIQUE_FINDER);
-        spnCliqueAttempts.setToolTipText(LassoOptions.DESC_CLIQUE_ATTEMPTS);
-        cmbDistanceAlg.setToolTipText(LassoOptions.DESC_DISTANCE_UPDATER);
-        spnLassoRun.setToolTipText(LassoOptions.DESC_LASSO_RUNS);
+        cmbCliqueAlg.setToolTipText(RootedLassoOptions.DESC_CLIQUE_FINDER);
+        spnCliqueAttempts.setToolTipText(RootedLassoOptions.DESC_CLIQUE_ATTEMPTS);
+        cmbDistanceAlg.setToolTipText(RootedLassoOptions.DESC_DISTANCE_UPDATER);
+        spnLassoRun.setToolTipText(RootedLassoOptions.DESC_LASSO_RUNS);
     }
 
     @Override
@@ -213,7 +213,7 @@ public class EquidistantLassoGUIPanel extends javax.swing.JPanel implements Lass
 
     @Override
     public void runTool(File input, File output, ToolHost host, StatusTracker tracker) {
-        //Get the remaining settings for Lasso and put into options object
+        //Get the remaining settings for RootedLasso and put into options object
         Integer attempts = null;
         try {
             attempts = Integer.class.cast(spnCliqueAttempts.getValue());
@@ -225,7 +225,7 @@ public class EquidistantLassoGUIPanel extends javax.swing.JPanel implements Lass
         try {
             runs = Integer.class.cast(spnLassoRun.getValue());
         } catch (Exception e) {
-            host.showErrorDialog("Number of Lasso runs invalid");
+            host.showErrorDialog("Number of RootedLasso runs invalid");
             return;
         }
         if(runs < 1 || attempts < 1) {
@@ -248,8 +248,8 @@ public class EquidistantLassoGUIPanel extends javax.swing.JPanel implements Lass
             return;
         }
 
-        // Create LassoOptions object
-        LassoOptions options = new LassoOptions();
+        // Create RootedLassoOptions object
+        RootedLassoOptions options = new RootedLassoOptions();
         options.setInput(input);
         options.setOutput(output);
         options.setLassoRuns(runs);
@@ -257,8 +257,8 @@ public class EquidistantLassoGUIPanel extends javax.swing.JPanel implements Lass
         options.setCliqueFinder(finder);
         options.setUpdater(updater);
 
-        // Execute Lasso
-        new LassoRunner(host).runLasso(options, tracker);
+        // Execute RootedLasso
+        new RootedLassoRunner(host).runLasso(options, tracker);
     }
 
     @Override

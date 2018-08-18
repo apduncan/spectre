@@ -1053,7 +1053,7 @@ public class Spectre extends javax.swing.JFrame implements DropTargetListener {
                     });
                     return;
                 } catch (Exception ex) {
-                    errorMessage("Unexpected problem occurred with Lasso", ex);
+                    errorMessage("Unexpected problem occurred with RootedLasso", ex);
                 }
             }
         });

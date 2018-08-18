@@ -32,11 +32,7 @@ import uk.ac.uea.cmp.spectre.core.ds.quad.quartet.QuartetSystem;
 import uk.ac.uea.cmp.spectre.core.io.nexus.Nexus;
 import uk.ac.uea.cmp.spectre.core.io.nexus.NexusReader;
 import uk.ac.uea.cmp.spectre.core.io.nexus.NexusWriter;
-import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
-import uk.ac.uea.cmp.spectre.lasso.LassoQuartets;
-import uk.ac.uea.cmp.spectre.lasso.lasso.LassoTest;
-import uk.ac.uea.cmp.spectre.lasso.unrooted.ChordalSubgraphFinder;
-import uk.ac.uea.cmp.spectre.lasso.unrooted.TripletCoverFinder;
+import uk.ac.uea.cmp.spectre.lasso.rooted.RootedLassoTest;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,7 +40,7 @@ import java.util.*;
 
 import static org.junit.Assert.*;
 
-public class LassoQuartetsTest {
+public class LassoShellingTest {
     @Before
     public void setup() {
         BasicConfigurator.configure();
@@ -56,8 +52,8 @@ public class LassoQuartetsTest {
         //Test ability to infer correctly in an incomplete matrix, which does contain diamonds
         double[][] matrix = { {0, 3, 8, 0}, {3, 0, 9, 10}, {8, 9, 0, 9}, {0, 10, 9, 0} };
         DistanceMatrix dm = new FlexibleDistanceMatrix(matrix);
-        LassoQuartets lq = new LassoQuartets(dm);
-        dm = lq.altEnrichMatrix();
+        LassoShelling lq = new LassoShelling(dm);
+        dm = lq.altShell();
         //distance between a and d should be set to 9, can be inferred from diamond
         assertEquals(dm.getDistance("A", "D"), 9, 0.01);
 
@@ -66,9 +62,9 @@ public class LassoQuartetsTest {
         double[][] pentMatrix = { {0, 3, 8, 0, 0}, {3, 0, 9, 16, 0}, {8, 9, 0, 15, 16}, {0, 16, 15, 0, 13},
                 {0, 0, 16, 13, 0} };
         DistanceMatrix pentDm = new FlexibleDistanceMatrix(pentMatrix);
-        lq = new LassoQuartets(pentDm);
+        lq = new LassoShelling(pentDm);
         //Check missing distances correctly inferrred
-        pentDm = lq.altEnrichMatrix();
+        pentDm = lq.altShell();
         assertEquals(pentDm.getDistance("A", "D"), 15,0.01);
         assertEquals(pentDm.getDistance("A", "E"), 16, 0.01);
         assertEquals(pentDm.getDistance("B", "E"), 17, 0.01);
@@ -86,18 +82,18 @@ public class LassoQuartetsTest {
         for(int i = 0; i < delete; i++) {
             dm.setDistance(pairs.get(i).getLeft(), pairs.get(i).getRight(), 0);
         }
-        LassoQuartets lq = new LassoQuartets(dm);
+        LassoShelling lq = new LassoShelling(dm);
         StopWatch timer = new StopWatch();
         System.out.println("Begin standard enriching");
         timer.start();
-        lq.enrichMatrix();
+        lq.shell();
         System.out.println("Finished enriching standard");
         timer.stop();
         System.out.println("Time: " + timer.getTime());
         timer.reset();
-        lq = new LassoQuartets(dm);
+        lq = new LassoShelling(dm);
         timer.start();
-        lq.altEnrichMatrix();
+        lq.altShell();
         timer.stop();
         System.out.println("Finished enriching alternate");
         System.out.println("Time: " + timer.getTime());
@@ -119,16 +115,16 @@ public class LassoQuartetsTest {
         }
     }
 
-    @Test
+//    @Test
     public void yeastTest() {
-        File input = FileUtils.toFile(LassoTest.class.getResource("/paradoxus-part-question.nex"));
+        File input = FileUtils.toFile(RootedLassoTest.class.getResource("/paradoxus-part-question.nex"));
         File output = new File("/home/hal/quartet-yeast.nex");
         try {
             Nexus nexus = new NexusReader().parse(input);
             LassoDistanceGraph lg = new LassoDistanceGraph(new FlexibleDistanceMatrix(nexus.getDistanceMatrix()));
             LassoDistanceGraph original = new LassoDistanceGraph(lg);
-            LassoQuartets lq = new LassoQuartets(lg);
-            FlexibleDistanceMatrix dm = new FlexibleDistanceMatrix(lq.altEnrichMatrix());
+            LassoShelling lq = new LassoShelling(lg);
+            FlexibleDistanceMatrix dm = new FlexibleDistanceMatrix(lq.altShell());
             QuartetSystem quartets = lq.getQuartets(true);
             //try to output
             NexusWriter writer = new NexusWriter();
@@ -149,8 +145,8 @@ public class LassoQuartetsTest {
         //Has 3 missing distance rather than 1
         double[][] pentMatrix = { {0, 3, 8, 0, 0}, {3, 0, 9, 16, 0}, {8, 9, 0, 15, 16}, {0, 16, 15, 0, 13}, {0, 0, 16, 13, 0} };
         DistanceMatrix pentDm = new FlexibleDistanceMatrix(pentMatrix);
-        LassoQuartets lq = new LassoQuartets(pentDm);
-        lq.enrichMatrix();
+        LassoShelling lq = new LassoShelling(pentDm);
+        lq.shell();
         QuartetSystem quartets = lq.getQuartets(true);
         //Test that matrix is complete
         assertEquals((pentMatrix.length * (pentMatrix.length -1)) * 0.5,
@@ -167,35 +163,14 @@ public class LassoQuartetsTest {
         //Convert this into a support graph
         LassoDistanceGraph graph = new LassoDistanceGraph(new FlexibleDistanceMatrix(additiveMatrix));
         //Get a chordal subgraph of this
-        DistanceMatrix chordalSubgraph = new ChordalSubgraphFinder(graph).find();
-        //Enrich this to attempt to return it to a complete metric
-        TripletCoverFinder cover = new TripletCoverFinder(new LassoDistanceGraph(chordalSubgraph));
-        List<LassoDistanceGraph> tripletCovers = cover.findTripletCovers();
-        //Should only be one cover, with all vertices included
-        assertEquals(1, tripletCovers.size());
-        assertEquals(additiveMatrix.length, tripletCovers.get(0).getTaxa().size());
         //Enrich
-        DistanceMatrix complete = new LassoQuartets(tripletCovers.get(0)).altEnrichMatrix();
+        DistanceMatrix complete = new LassoShelling(graph).altShell();
         double[][] derived = complete.getMatrix(Comparator.naturalOrder());
         //Check the input and output metrics are equivalent
         for(int i = 0; i < additiveMatrix.length; i++) {
             assertArrayEquals(additiveMatrix[i], derived[i], 0.001);
         }
         //Output to see if splitstree constructs correct tree
-//        File output = new File("/home/hal/additive.nex");
-//        File outputQuartets = new File("/home/hal/additive-quartet.nex");
-//        NexusWriter writer = new NexusWriter();
-//        NexusWriter writerQuartets = new NexusWriter();
-//        LassoQuartets quarters = new LassoQuartets(complete);
-//        try {
-//            writer.writeDistanceMatrix(output, complete);
-//            writerQuartets.appendHeader();
-//            writerQuartets.append(complete.getTaxa().sortById());
-//            writerQuartets.append(quarters.getQuartetsAsString(true));
-//            writerQuartets.write(outputQuartets);
-//        } catch (IOException error) {
-//
-//        }
     }
 
     @Test
@@ -221,16 +196,8 @@ public class LassoQuartetsTest {
         };
         //Convert this into a support graph
         LassoDistanceGraph graph = new LassoDistanceGraph(new FlexibleDistanceMatrix(diamonds));
-        //Get a chordal subgraph of this
-        DistanceMatrix chordalSubgraph = new ChordalSubgraphFinder(graph).find();
-        //Enrich this to attempt to return it to a complete metric
-        TripletCoverFinder cover = new TripletCoverFinder(new LassoDistanceGraph(chordalSubgraph));
-        List<LassoDistanceGraph> tripletCovers = cover.findTripletCovers();
-        //Should only be one cover, with all vertices included
-        assertEquals(1, tripletCovers.size());
-        assertEquals(diamonds.length, tripletCovers.get(0).getTaxa().size());
         //Enrich
-        DistanceMatrix complete = new LassoQuartets(tripletCovers.get(0)).altEnrichMatrix();
+        DistanceMatrix complete = new LassoShelling(graph).altShell();
         double[][] derived = complete.getMatrix(Comparator.naturalOrder());
         //Check the input and output metrics are equivalent
         for(int i = 0; i < additive.length; i++) {

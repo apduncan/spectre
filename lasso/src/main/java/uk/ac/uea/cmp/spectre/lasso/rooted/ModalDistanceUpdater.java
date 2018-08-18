@@ -13,14 +13,12 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;import org.apache.commons.lang3.tuple.ImmutablePair;
+package uk.ac.uea.cmp.spectre.lasso.rooted;import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.tree.newick.NewickNode;
 import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
 import uk.ac.uea.cmp.spectre.lasso.LassoTree;
-import uk.ac.uea.cmp.spectre.lasso.lasso.DistanceUpdater;
-import uk.ac.uea.cmp.spectre.lasso.lasso.LassoOptions;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,7 +26,7 @@ import java.util.stream.Collectors;
 
 public class ModalDistanceUpdater extends DistanceUpdater {
 
-    public ModalDistanceUpdater(LassoOptions options) {
+    public ModalDistanceUpdater(RootedLassoOptions options) {
         super(options);
     }
 
@@ -39,7 +37,7 @@ public class ModalDistanceUpdater extends DistanceUpdater {
         LassoTree cluster = graph.getCluster(clusterParent);
         //Update distances from vertex to cluster parent
         //Distances justifying retained edges should be returned in map
-        //Only relevant if returning a strong uk.ac.uea.cmp.spectre.lasso.lasso.Lasso, such as in this approach
+        //Only relevant if returning a strong uk.ac.uea.cmp.spectre.rooted.rooted.RootedLasso, such as in this approach
         Map<Identifier, Set<Identifier>> support = new ConcurrentHashMap<>();
         this.clusterNeighbours(graph, cluster).entrySet().parallelStream().forEach((entry) -> {
             Identifier key = entry.getKey();

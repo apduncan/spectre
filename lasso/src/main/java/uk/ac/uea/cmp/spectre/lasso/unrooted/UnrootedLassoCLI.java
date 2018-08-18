@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.uea.cmp.spectre.core.ui.cli.CommandLineHelper;
 import uk.ac.uea.cmp.spectre.core.util.LogConfig;
-import uk.ac.uea.cmp.spectre.lasso.lasso.LassoCLI;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +31,6 @@ public class UnrootedLassoCLI {
     private static Logger log = LoggerFactory.getLogger(UnrootedLassoCLI.class);
 
     public static final String OPT_OUTPUT = "output_file";
-    public static final String OPT_SEED_TREE= "seed_tree";
 
     public static Options createOptions() {
 
@@ -42,9 +40,6 @@ public class UnrootedLassoCLI {
         options.addOption(OptionBuilder.withArgName("output").withLongOpt(OPT_OUTPUT).hasArg()
                 .withDescription(UnrootedLassoOptions.DESC_OUTPUT).create("o"));
 
-        options.addOption(OptionBuilder.withArgName("seed").withLongOpt(OPT_SEED_TREE).hasArg()
-                .withDescription(UnrootedLassoOptions.DESC_SEED_TREE).create("t"));
-
         options.addOption(CommandLineHelper.HELP_OPTION);
 
         return options;
@@ -53,7 +48,7 @@ public class UnrootedLassoCLI {
 
     public static void main(String[] args) {
 
-        //TODO: CommandLine uk.ac.uea.cmp.spectre.lasso.lasso.Lasso description
+        //TODO: CommandLine uk.ac.uea.cmp.spectre.rooted.rooted.RootedLasso description
         CommandLine commandLine = new CommandLineHelper().startApp(createOptions(), "unrootedlasso [options] <distance_matrix_file>",
                 "Creates an unrooted tree from an input distance matrix which can contain missing distances. " +
                         "Locate a triplet cover in the input distance, which is a subet of the data for which only " +
@@ -82,7 +77,7 @@ public class UnrootedLassoCLI {
             }
 
             String prefix = "unrootedlasso";
-            File output = new File("./lasso-output.nex");
+            File output = new File("./rooted-output.nex");
             if (commandLine.hasOption(OPT_OUTPUT)) {
                 output = new File(commandLine.getOptionValue(OPT_OUTPUT));
             }
@@ -98,15 +93,8 @@ public class UnrootedLassoCLI {
             //Set options
             options.setInput(input);
             options.setOutput(output);
-            if(commandLine.hasOption(OPT_SEED_TREE)) {
-                try {
-                    ChordalSubgraphFinder.SEED_TREE.valueOf(commandLine.getOptionValue(OPT_SEED_TREE));
-                } catch (Exception e) {
-                    throw new IOException("Invalid option for seed tree");
-                }
-            }
 
-            // Run Lasso
+            // Run RootedLasso
             new UnrootedLasso(options).run();
 
         } catch (Exception e) {

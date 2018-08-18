@@ -52,7 +52,7 @@ public class QuartetLassoCLI {
 
     public static void main(String[] args) {
 
-        //TODO: CommandLine uk.ac.uea.cmp.spectre.lasso.lasso.Lasso description
+        //TODO: CommandLine uk.ac.uea.cmp.spectre.rooted.rooted.RootedLasso description
         CommandLine commandLine = new CommandLineHelper().startApp(createOptions(), "quartetlasso [options] <distance_matrix_file>",
                 "Find all possible quartets in a distance matrix, which can contain missing values. " +
                         "Any missing values which can be inferred are added to the matrix before quartets are " +
@@ -80,7 +80,7 @@ public class QuartetLassoCLI {
             }
 
             String prefix = "unrootedlasso";
-            File output = new File("./lasso-output.nex");
+            File output = new File("./rooted-output.nex");
             if (commandLine.hasOption(OPT_OUTPUT)) {
                 output = new File(commandLine.getOptionValue(OPT_OUTPUT));
             }
@@ -104,7 +104,7 @@ public class QuartetLassoCLI {
                 }
             }
 
-            // Run Lasso
+            // Run RootedLasso
             new QuartetLasso(options).run();
 
         } catch (Exception e) {

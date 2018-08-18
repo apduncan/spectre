@@ -13,7 +13,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;
+package uk.ac.uea.cmp.spectre.lasso.rooted;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +40,7 @@ public class BKCliqueFinderTest {
 
     @Test
     public void find() {
-         CliqueFinder heuristic = CliqueFinderFactory.HEURISTIC.get(new LassoOptions());
+         CliqueFinder heuristic = CliqueFinderFactory.HEURISTIC.get(new RootedLassoOptions());
         Set<Identifier> expected = new HashSet<>();
         for(int i = 0; i < 3; i++) {
             expected.add(this.simpleGraph.getTaxa().get(i));

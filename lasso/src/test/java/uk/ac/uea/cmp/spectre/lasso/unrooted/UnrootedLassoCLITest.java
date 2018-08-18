@@ -48,7 +48,7 @@ public class UnrootedLassoCLITest {
 
     @Test
     public void runCLI() throws IOException {
-        //uk.ac.uea.cmp.spectre.lasso.Test with more complex options
+        //uk.ac.uea.cmp.spectre.rooted.Test with more complex options
         File outputDir = temporaryFolder.getRoot();
         File outputFile = new File(outputDir.getAbsolutePath() + "output.nex");
 

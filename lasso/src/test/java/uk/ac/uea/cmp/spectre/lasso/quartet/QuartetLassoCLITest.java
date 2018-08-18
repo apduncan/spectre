@@ -23,8 +23,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
-import uk.ac.uea.cmp.spectre.lasso.lasso.LassoCLI;
-import uk.ac.uea.cmp.spectre.lasso.lasso.LassoCLITest;
+import uk.ac.uea.cmp.spectre.lasso.rooted.RootedLassoCLITest;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,7 +51,7 @@ public class QuartetLassoCLITest {
 
         File outputFile = new File(outputDir.getAbsolutePath() + "output.nex");
 
-        File testFile1 = FileUtils.toFile(LassoCLITest.class.getResource("/ex-additive-diamonds.nex"));
+        File testFile1 = FileUtils.toFile(RootedLassoCLITest.class.getResource("/ex-additive-diamonds.nex"));
 
         QuartetLassoCLI.main(new String[]{
                 "-o", outputFile.getAbsolutePath(),

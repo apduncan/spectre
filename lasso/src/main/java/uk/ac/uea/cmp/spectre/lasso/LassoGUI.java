@@ -9,8 +9,8 @@ import org.apache.log4j.Logger;
 import uk.ac.uea.cmp.spectre.core.ui.gui.JobController;
 import uk.ac.uea.cmp.spectre.core.ui.gui.StatusTracker;
 import uk.ac.uea.cmp.spectre.core.ui.gui.ToolHost;
-import uk.ac.uea.cmp.spectre.lasso.lasso.EquidistantLassoGUIPanel;
-import uk.ac.uea.cmp.spectre.lasso.lasso.LassoOptions;
+import uk.ac.uea.cmp.spectre.lasso.rooted.RootedLassoGUIPanel;
+import uk.ac.uea.cmp.spectre.lasso.rooted.RootedLassoOptions;
 import uk.ac.uea.cmp.spectre.lasso.quartet.QuartetLassoGUIPanel;
 import uk.ac.uea.cmp.spectre.lasso.unrooted.UnrootedLassoGUIPanel;
 
@@ -34,7 +34,7 @@ public class LassoGUI extends javax.swing.JFrame implements ToolHost {
     private Component[] inputComponents;
     private static Logger log = Logger.getLogger(LassoGUI.class.getName());
     /**
-     * Creates new form LassoGUI
+     * Creates new form RootedLassoGUI
      */
     public LassoGUI() {
         initComponents();
@@ -45,7 +45,7 @@ public class LassoGUI extends javax.swing.JFrame implements ToolHost {
         } catch (URISyntaxException e) {
             log.debug("Could not load logo");
         }
-        setTitle("Lasso");
+        setTitle("RootedLasso");
         setRunningStatus(false);
         this.inputComponents = new Component[]{btnOutput, btnInput, btnExecute, txtInput, txtOutput, tabTools};
         this.lastInput = null;
@@ -53,7 +53,7 @@ public class LassoGUI extends javax.swing.JFrame implements ToolHost {
     }
     
     private void addTabs() {
-        EquidistantLassoGUIPanel equi = new EquidistantLassoGUIPanel();
+        RootedLassoGUIPanel equi = new RootedLassoGUIPanel();
         UnrootedLassoGUIPanel unroot = new UnrootedLassoGUIPanel();
         QuartetLassoGUIPanel quartet = new QuartetLassoGUIPanel();
         tabTools.addTab(equi.tabTitle(), equi);
@@ -66,8 +66,8 @@ public class LassoGUI extends javax.swing.JFrame implements ToolHost {
     }
 
     private void initTooltips() {
-        txtInput.setToolTipText(LassoOptions.DESC_INPUT);
-        txtOutput.setToolTipText(LassoOptions.DESC_OUTPUT);
+        txtInput.setToolTipText(RootedLassoOptions.DESC_INPUT);
+        txtOutput.setToolTipText(RootedLassoOptions.DESC_OUTPUT);
     }
 
     /**
@@ -269,7 +269,7 @@ public class LassoGUI extends javax.swing.JFrame implements ToolHost {
     public void showErrorDialog(String message) {
         JOptionPane.showMessageDialog(this,
                 message,
-                "Lasso Error",
+                "RootedLasso Error",
                 JOptionPane.ERROR_MESSAGE);
     }
 

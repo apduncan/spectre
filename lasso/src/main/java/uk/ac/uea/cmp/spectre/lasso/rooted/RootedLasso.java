@@ -13,7 +13,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.uea.cmp.spectre.lasso.lasso;
+package uk.ac.uea.cmp.spectre.lasso.rooted;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
@@ -33,28 +33,28 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Lasso extends RunnableTool {
-    private static Logger logger = LoggerFactory.getLogger(Lasso.class);
-    private LassoOptions options;
+public class RootedLasso extends RunnableTool {
+    private static Logger logger = LoggerFactory.getLogger(RootedLasso.class);
+    private RootedLassoOptions options;
 
-    public Lasso() {
-        this(new LassoOptions());
+    public RootedLasso() {
+        this(new RootedLassoOptions());
     }
 
-    public Lasso(LassoOptions options) {
+    public RootedLasso(RootedLassoOptions options) {
         this.options = options;
     }
 
-    public Lasso(LassoOptions options, StatusTracker tracker) {
+    public RootedLasso(RootedLassoOptions options, StatusTracker tracker) {
         super(tracker);
         this.options = options;
     }
 
-    public LassoOptions getOptions() {
+    public RootedLassoOptions getOptions() {
         return options;
     }
 
-    public void setOptions(LassoOptions options) {
+    public void setOptions(RootedLassoOptions options) {
         this.options = options;
     }
 
@@ -65,7 +65,7 @@ public class Lasso extends RunnableTool {
 
     @Override
     public void run() {
-        //Run lasso using the current set options
+        //Run rooted using the current set options
         try {
             //Timing
             StopWatch stopwatch = new StopWatch();
@@ -90,8 +90,8 @@ public class Lasso extends RunnableTool {
                 throw new IOException("Could not find distance matrix in input");
 
             this.notifyUser("Loaded distance matrix containing " + matrix.size() + " taxa");
-            this.notifyUser("Executing Lasso");
-            LassoResult result = this.execute(matrix);
+            this.notifyUser("Executing RootedLasso");
+            RootedLassoResult result = this.execute(matrix);
             this.notifyUser("Saving results to disk");
             result.save(this.options.getOutput());
             stopwatch.stop();
@@ -106,15 +106,15 @@ public class Lasso extends RunnableTool {
         }
     }
 
-    private LassoResult execute(DistanceMatrix matrix) {
-        List<LassoResult> results = new ArrayList<>();
+    private RootedLassoResult execute(DistanceMatrix matrix) {
+        List<RootedLassoResult> results = new ArrayList<>();
         //Instantiate clique finder and distance updater objects based on options
         DistanceUpdater updater = this.getOptions().getUpdater().get(this.getOptions());
         CliqueFinder finder = this.getOptions().getCliqueFinder().get(this.getOptions());
         final LassoDistanceGraph original = new LassoDistanceGraph(matrix);
         //Run user defined number of times, then select result with most taxa
         for(int i = 0; i < this.getOptions().getLassoRuns(); i++) {
-            this.notifyUser("Executing Lasso run " + (i+1) + " of " + this.getOptions().getLassoRuns());
+            this.notifyUser("Executing RootedLasso run " + (i+1) + " of " + this.getOptions().getLassoRuns());
             //Make a new copy of the graph from the input matrix
             LassoDistanceGraph graph = new LassoDistanceGraph(matrix);
             long countEdges = 0;
@@ -126,7 +126,7 @@ public class Lasso extends RunnableTool {
             //Map cords to weights
             Map<Pair<Identifier, Identifier>, Double> distances = graph.getDistancesUsed().parallelStream().
                     collect(Collectors.toMap(pair -> pair, pair -> original.getDistance(pair.getLeft(), pair.getRight())));
-            results.add(new LassoResult(graph.getAllClusters(), distances));
+            results.add(new RootedLassoResult(graph.getAllClusters(), distances));
         }
         //Return result with a cluster which has the largest single tree (largest being contains most taxa)
         return results.stream()

@@ -17,12 +17,9 @@ package uk.ac.uea.cmp.spectre.lasso.unrooted;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.math3.util.CombinatoricsUtils;
 import uk.ac.uea.cmp.spectre.core.ds.Identifier;
 import uk.ac.uea.cmp.spectre.core.ds.distance.FlexibleDistanceMatrix;
-import uk.ac.uea.cmp.spectre.core.ds.quad.quartet.QuartetSystem;
 import uk.ac.uea.cmp.spectre.lasso.LassoDistanceGraph;
-import uk.ac.uea.cmp.spectre.lasso.LassoQuartets;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -70,6 +67,11 @@ public class IncrementalLasso {
         }
     }
 
+    /**
+     * Locate the first tree on four or more taxa and the corresponding strong lasso
+     * @return A tree metric and corresponding lasso
+     * @throws IllegalStateException When no tree on four taxa or more exists
+     */
     public Pair<LassoDistanceGraph, Set<Pair<Identifier, Identifier>>> find() throws IllegalStateException {
         Set<Pair<Identifier, Identifier>> lasso;
         LassoDistanceGraph metric;
@@ -79,7 +81,7 @@ public class IncrementalLasso {
             lasso = new HashSet<>();
             boolean terminate = false;
             List<Identifier> triangle = startTriangle();
-            //Add these to metric, and to lasso
+            //Add these to metric, and to rooted
             augmentEdge(triangle.get(0), triangle.get(1), metric);
             augmentEdge(triangle.get(0), triangle.get(2), metric);
             augmentEdge(triangle.get(1), triangle.get(2), metric);
@@ -103,7 +105,7 @@ public class IncrementalLasso {
                             //exlcude this vertex from consideration in the future
                             verticesAdded.add(candidate);
                             candidates.remove(candidate);
-                            //add all these edges to our metric, and lasso
+                            //add all these edges to our metric, and rooted
                             augmentEdge(cord.getLeft(), candidate, metric);
                             augmentEdge(cord.getRight(), candidate, metric);
                             addToLasso(cord.getRight(), candidate, metric, lasso);
@@ -130,9 +132,13 @@ public class IncrementalLasso {
 
     private void addToLasso(Identifier v1, Identifier v2, LassoDistanceGraph metric, Set<Pair<Identifier, Identifier>> lasso) {
         lasso.add(sortedPair(metric.getTaxa().getByName(v1.getName()), metric.getTaxa().getByName(v2.getName())));
-
     }
 
+    /**
+     * Locate a starting triangle to start building our tree from
+     * @return List of three identifiers a, b, c such that cords ab, ac, ad exist
+     * @throws IllegalStateException No valid triangles exist that have not already been used
+     */
     private List<Identifier> startTriangle() throws IllegalStateException {
         //Order by edge weight, always want lowest weight select to get cherry edge weights
         List<Pair<Identifier, Identifier>> orderedEdges = graph.getMap().entrySet().stream()
@@ -234,14 +240,21 @@ public class IncrementalLasso {
         return results;
     }
 
+    /**
+     * Test if the diamond with these distances represents a skew diamond with a quartet representation with all
+     * positive edge weightings
+     * @param ay Edge A
+     * @param bx Edge paralell to A
+     * @param ax Edge B
+     * @param by Edge parallel to B
+     * @param xy Chord
+     * @return Boolean
+     */
     private boolean validDiamond(double ay, double bx, double ax, double by, double xy) {
         if(ax + by == bx + ay)
             return false;
         double ab = Math.max(ay + bx, ax + by) - xy;
         //ensure no negative branch lengths
-//        double uv = (Math.max(ay + bx, ax + by) - Math.min(ay + bx, ax + by)) / 2;
-//        double au = (ab + ax - bx) / 2;
-//        return triangle(ay, by, ab) && triangle(ax, ab, bx) && triangle(xy, by, bx) && triangle(ab, ax, bx);
         //relabel for convenience - cd|ef will be cherries
         double cd, ef, ce, cf, de, df;
         if(ay + bx > ax + by) {
@@ -268,10 +281,6 @@ public class IncrementalLasso {
         double ev = ce - uv - cu;
         double fv = ef - ev;
         return tri && uv > 0 && cu > 0 && du > 0 && ev > 0 && fv > 0;
-    }
-
-    private boolean triangle(double edge1, double edge2, double edge3) {
-        return edge1 <= edge2 + edge3 || edge3 <= edge1 + edge2 || edge3 <= edge1 + edge2;
     }
 
     /**
