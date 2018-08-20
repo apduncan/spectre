@@ -208,7 +208,7 @@ public class RootedLassoGUIPanel extends javax.swing.JPanel implements LassoTool
 
     @Override
     public String tabTitle() {
-        return "Equidistant";
+        return "Rooted";
     }
 
     @Override

@@ -37,6 +37,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class IncrementalLassoTest {
@@ -67,15 +68,7 @@ public class IncrementalLassoTest {
     }
 
     @Test
-    public void random_ints_out() throws IOException {
-        File out = new File("/home/hal/Dropbox/Dissertation/test_data/random_ints.nex");
-        random_integers(out, 20);
-        DistanceMatrix dm = new NexusReader().readDistanceMatrix(out);
-        dm = deleteRandom(dm, 20);
-    }
-
-    @Test
-    public void run_macaque() throws IOException {
+    public void run_macaque_additive() throws IOException {
         File input = FileUtils.toFile(UnrootedLassoTest.class.getResource("/macaque-additive-integer.nex"));
         File output = folder.newFile("output_an_additive.nex");
         //Delete some of the values in additive matrix
@@ -88,37 +81,25 @@ public class IncrementalLassoTest {
         new NexusWriter().writeDistanceMatrix(folder.newFile("macaque.nex"), derived);
         for (Map.Entry<Pair<Identifier, Identifier>, Double> entry : derived.getMap().entrySet()) {
             double dist = original.getDistanceMatrix().getDistance(entry.getKey().getRight().getName(), entry.getKey().getLeft().getName());
-        }
-        for(Pair<Identifier, Identifier> cord: derivedPair.getRight()) {
-            double orig = original.getDistanceMatrix().getDistance(cord.getLeft().getName(), cord.getRight().getName());
-            double der = derived.getDistance(cord.getLeft().getName(), cord.getRight().getName());
+            assertEquals(dist, entry.getValue(), 0.001);
         }
     }
 
     @Test
     public void run_random() throws IOException {
-        File input = FileUtils.toFile(UnrootedLassoTest.class.getResource("/macaque-additive-integer.nex"));
         File random = folder.newFile("random.nex");
-        File output = folder.newFile("output_an_additive.nex");
         random_integers(random, 15);
-        input = random;
-        //Delete some of the values in additive matrix
-        DistanceMatrix partial = deleteRandom(new NexusReader().readDistanceMatrix(input), 10);
+        //Delete some of the values
+        DistanceMatrix partial = deleteRandom(new NexusReader().readDistanceMatrix(random), 10);
         File inputPartial = folder.newFile("partial.nex");
         new NexusWriter().writeDistanceMatrix(inputPartial, partial);
-        Nexus original = new NexusReader().parse(input);
+        Nexus original = new NexusReader().parse(random);
         Pair<LassoDistanceGraph, Set<Pair<Identifier, Identifier>>> derivedPair = new IncrementalLasso(new LassoDistanceGraph(original.getDistanceMatrix())).find();
         DistanceMatrix derived = derivedPair.getLeft();
-        new NexusWriter().writeDistanceMatrix(new File("/home/hal/omigod-large.nex"), derived);
-        QuartetLassoResult qr = new QuartetLassoResult();
-        qr.setQuartetBlock(new LassoShelling(derived).getQuartetsAsString(true));
-        new NexusWriter().writeDistanceMatrix(new File("/home/hal/omigod-large-partial.nex"), partial);
-        for (Map.Entry<Pair<Identifier, Identifier>, Double> entry : derived.getMap().entrySet()) {
-            double dist = original.getDistanceMatrix().getDistance(entry.getKey().getRight().getName(), entry.getKey().getLeft().getName());
-        }
         for(Pair<Identifier, Identifier> cord: derivedPair.getRight()) {
             double orig = original.getDistanceMatrix().getDistance(cord.getLeft().getName(), cord.getRight().getName());
             double der = derived.getDistance(cord.getLeft().getName(), cord.getRight().getName());
+            assertEquals(orig, der, 0.001);
         }
     }
 }
